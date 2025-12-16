@@ -72,7 +72,7 @@
             <td>
               <img
                 v-if="product.images && product.images[0]"
-                :src="product.images[0].image"
+                :src="product.images[0].image ?? undefined"
                 class="product-thumb"
                 alt=""
               />

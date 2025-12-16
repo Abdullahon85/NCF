@@ -185,7 +185,7 @@
 
           <div class="form-group">
             <input
-              ref="fileInput"
+              ref="fileInputRef"
               type="file"
               multiple
               accept="image/*"
@@ -194,7 +194,7 @@
             />
           </div>
           <button
-            @click.prevent="$refs.fileInput?.click()"
+            @click.prevent="triggerFileInput"
             type="button"
             class="btn btn-secondary"
           >
@@ -324,7 +324,6 @@ const formData = ref<FormData>({
 });
 
 const submitting = ref(false);
-const fileInput = ref<HTMLInputElement>();
 
 const isEdit = computed(() => !!props.product);
 
@@ -378,12 +377,18 @@ const generateSlug = (text: string): string => {
     .replace(/^-+|-+$/g, "");
 };
 
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
+const triggerFileInput = () => {
+  fileInputRef.value?.click();
+};
+
 const handleImageUpload = (event: Event) => {
   const target = event.target as HTMLInputElement;
   const files = target.files;
   if (!files) return;
 
-  for (let file of files) {
+  for (let file of Array.from(files)) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const imageData: ImageData = {

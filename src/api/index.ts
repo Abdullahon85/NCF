@@ -18,8 +18,8 @@ import type {
 } from "@/types";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8001/api";
-//   "http://127.0.0.1:8001/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
+  import.meta.env.VITE_API_URL ?? "https://ncb-1.onrender.com/api";
+//   "http://127.0.0.1:8001/api" "https://ncb-r1l6.onrender.com/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {

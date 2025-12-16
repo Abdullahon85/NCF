@@ -299,12 +299,12 @@ const loadBrandTags = async (slug: string) => {
     const data = res.data || [];
 
     // Flatten grouped tags into a single array
-    if (Array.isArray(data) && data.length > 0 && data[0].group_name) {
+    if (Array.isArray(data) && data.length > 0 && (data[0] as any).group_name) {
       // Data is in grouped format from ProductTagGroup
       const flatTags: any[] = [];
       const seenIds = new Set<number>();
 
-      for (const group of data) {
+      for (const group of data as any[]) {
         if (group.tags && Array.isArray(group.tags)) {
           for (const tag of group.tags) {
             if (!seenIds.has(tag.id)) {
