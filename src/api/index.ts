@@ -1,0 +1,217 @@
+// src/api/index.ts
+import axios from "axios";
+import type {
+  Category,
+  Product,
+  NewsItem,
+  AboutContent,
+  ContactInfo,
+  ContactMessage,
+  PaginatedResponse,
+  ProductFilters,
+  Order,
+  Review,
+  Tag,
+  Brand,
+  BrandFilters,
+  ProductTagGroup,
+} from "@/types";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8001/api";
+//   "http://127.0.0.1:8001/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error("API Error:", error);
+    return Promise.reject(error);
+  }
+);
+// api.interceptors.request.use(async (cfg) => {
+//   const token = localStorage.getItem('token');
+//   if (token) cfg.headers = { ...cfg.headers, Authorization: `Bearer ${token}` };
+//   return cfg;
+// });
+
+export const categoriesAPI = {
+  getAll: (limit?: number) => {
+    const params = limit ? { limit } : {};
+    return api.get<PaginatedResponse<Category>>("/categories/", { params });
+  },
+
+  getBySlug: (slug: string) => {
+    return api.get<Category>(`/categories/${slug}/`);
+  },
+
+  getProducts: (slug: string, params?: Record<string, any>) => {
+    return api.get<PaginatedResponse<Product>>(
+      `/categories/${slug}/products/`,
+      { params }
+    );
+  },
+
+  getPriceRange(categorySlug: string) {
+    // Update to match backend price range endpoint
+    return api.get(`/categories/${categorySlug}/price-range/`);
+  },
+
+  getBrands: (slug: string) => api.get<Brand[]>(`/categories/${slug}/brands/`),
+  // Endpoint may return either a flat Tag[] or grouped ProductTagGroup[] depending on backend.
+  getTags: (slug: string) =>
+    api.get<Tag[] | ProductTagGroup[]>(`/categories/${slug}/tags/`),
+  getFeatured: () =>
+    api.get("/categories/", {
+      params: {
+        page: 1,
+        page_size: 3,
+      },
+    }),
+};
+
+export const productsAPI = {
+  getAll: (params?: ProductFilters) => {
+    return api.get<PaginatedResponse<Product>>("/products/", { params });
+  },
+  search: (query: string, params?: Partial<ProductFilters>) => {
+    return api.get<PaginatedResponse<Product>>("/products/", {
+      params: {
+        search: query,
+        ...params,
+      },
+    });
+  },
+  getByFeatureValue: (value: string) => {
+    return api.get<Product[]>("/products/by-feature/", { params: { value } });
+  },
+  getBySlug: (slug: string) => {
+    return api.get<Product>(`/products/${slug}/`);
+  },
+
+  getByBrand: (
+    brandSlug: string,
+    params?: { page?: number; page_size?: number }
+  ) => {
+    return api.get<PaginatedResponse<Product>>(
+      `/brands/${brandSlug}/products/`,
+      { params }
+    );
+  },
+  getPriceRange(categorySlug: string) {
+    return api.get("/products/price-range/", {
+      params: { category: categorySlug },
+    });
+  },
+
+  // CRUD operations
+  create: (data: Record<string, any>) => {
+    return api.post<Product>("/products/", data);
+  },
+
+  update: (slug: string, data: Record<string, any>) => {
+    return api.patch<Product>(`/products/${slug}/`, data);
+  },
+
+  delete: (slug: string) => {
+    return api.delete(`/products/${slug}/`);
+  },
+
+  uploadImages: (slug: string, formData: FormData) => {
+    return api.post(`/products/${slug}/upload-image/`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+};
+
+export const newsAPI = {
+  getAll: (limit?: number) => {
+    const params = limit ? { limit } : {};
+    return api.get<PaginatedResponse<NewsItem>>("/news/", { params });
+  },
+
+  getBySlug: (slug: string) => {
+    return api.get<NewsItem>(`/news/${slug}/`);
+  },
+};
+
+export const brandsAPI = {
+  getAll: (params?: BrandFilters) => {
+    return api.get<PaginatedResponse<Brand>>("/brands/", { params });
+  },
+  getById: (id: number | string) => {
+    return api.get<Brand>(`/brands/${id}/`);
+  },
+  getBySlug: (slug: string) => {
+    return api.get<Brand>(`/brands/${slug}/`);
+  },
+
+  getCategories: (slug: string) => {
+    return api.get<Category[]>(`/brands/${slug}/categories/`);
+  },
+  getTags: (slug: string) => {
+    return api.get<Tag[]>(`/brands/${slug}/tags/`);
+  },
+  getProducts: (slug: string, params?: Record<string, any>) => {
+    return api.get<PaginatedResponse<Product>>(`/brands/${slug}/products/`, {
+      params,
+    });
+  },
+};
+
+export const aboutAPI = {
+  get: () => {
+    return api.get<AboutContent>("/about/");
+  },
+};
+
+export const contactAPI = {
+  getInfo: () => {
+    return api.get<ContactInfo>("/contact/");
+  },
+  sendMessage: (data: ContactMessage) => {
+    return api.post("/contact/message/", data);
+  },
+};
+
+export const ordersAPI = {
+  create: (payload: Order) => api.post("/orders/", payload),
+  getById: (id: number) => api.get<Order>(`/orders/${id}/`),
+  list: (params?: Record<string, any>) => api.get("/orders/", { params }),
+};
+
+export const reviewsAPI = {
+  listByProduct: (productId: number | string, params?: any) =>
+    api.get<PaginatedResponse<Review>>(`/products/${productId}/reviews/`, {
+      params,
+    }),
+  create: (productId: number, payload: Partial<Review>) =>
+    api.post(`/products/${productId}/reviews/`, payload),
+  get: (id: number) => api.get(`/reviews/${id}/`),
+};
+
+export const tagsAPI = {
+  getAll: (params?: Record<string, any>) =>
+    api.get<PaginatedResponse<Tag>>("/tags/", { params }),
+};
+
+/**
+ * Construct full image URL from API path
+ * @param path - image path from API (relative or absolute URL)
+ * @returns full image URL
+ */
+export const getImageUrl = (path: string | null): string => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+
+  let base = (import.meta.env.VITE_API_URL ||
+    "http://127.0.0.1:8001") as string;
+
+  base = base.replace(/\/api\/?$/, "");
+  return `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+};
