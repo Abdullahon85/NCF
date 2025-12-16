@@ -38,6 +38,7 @@
 
           <li><router-link to="/about">О нас</router-link></li>
           <li><router-link to="/contact">Контакты</router-link></li>
+          <li><router-link to="/admin">Админка</router-link></li>
         </ul>
       </nav>
     </div>
