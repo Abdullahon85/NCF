@@ -343,9 +343,22 @@ const loadProducts = async (): Promise<void> => {
       pagination.page = 1;
       await loadProducts();
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error("Ошибка загрузки товаров:", err);
-    error.value = "Не удалось загрузить товары. Попробуйте позже.";
+
+    // Better error messages
+    if (err.response?.status === 429) {
+      error.value = "Слишком много запросов. Пожалуйста, подождите немного...";
+    } else if (err.response?.status === 404) {
+      error.value = "Категория не найдена";
+    } else if (err.response?.status >= 500) {
+      error.value = "Ошибка сервера. Попробуйте обновить страницу";
+    } else if (!navigator.onLine) {
+      error.value = "Проверьте подключение к интернету";
+    } else {
+      error.value = "Не удалось загрузить товары. Попробуйте позже.";
+    }
+
     products.value = [];
   } finally {
     loading.value = false;

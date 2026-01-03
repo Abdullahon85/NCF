@@ -83,6 +83,7 @@
                 v-model="passwordForm.oldPassword"
                 :type="showOldPassword ? 'text' : 'password'"
                 placeholder="Введите текущий пароль"
+                autocomplete="current-password"
                 required
               />
               <button
@@ -102,6 +103,7 @@
                 v-model="passwordForm.newPassword"
                 :type="showNewPassword ? 'text' : 'password'"
                 placeholder="Введите новый пароль"
+                autocomplete="new-password"
                 required
                 minlength="8"
               />
@@ -123,6 +125,7 @@
                 v-model="passwordForm.confirmPassword"
                 :type="showConfirmPassword ? 'text' : 'password'"
                 placeholder="Повторите новый пароль"
+                autocomplete="new-password"
                 required
               />
               <button

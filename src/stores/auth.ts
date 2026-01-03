@@ -1,7 +1,7 @@
 // src/stores/auth.ts
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import { authAPI } from "@/api/admin";
+import { authAPI, tokenStorage } from "@/api/admin";
 
 export interface User {
   id: number;
@@ -11,8 +11,6 @@ export interface User {
   last_name: string;
   is_staff: boolean;
   is_superuser: boolean;
-  date_joined: string;
-  last_login: string;
 }
 
 export const useAuthStore = defineStore("auth", () => {
@@ -23,7 +21,9 @@ export const useAuthStore = defineStore("auth", () => {
   const initialized = ref(false);
 
   // Getters
-  const isAuthenticated = computed(() => !!user.value);
+  const isAuthenticated = computed(
+    () => authAPI.checkSession() && !!user.value
+  );
   const isAdmin = computed(
     () => user.value?.is_staff || user.value?.is_superuser
   );
@@ -39,10 +39,19 @@ export const useAuthStore = defineStore("auth", () => {
 
     try {
       loading.value = true;
+
+      // Проверка наличия и валидности токена
+      if (!authAPI.checkSession()) {
+        user.value = null;
+        initialized.value = true;
+        return;
+      }
+
       const response = await authAPI.getMe();
       user.value = response.data;
     } catch (e) {
       user.value = null;
+      tokenStorage.clearTokens();
     } finally {
       loading.value = false;
       initialized.value = true;
@@ -54,13 +63,21 @@ export const useAuthStore = defineStore("auth", () => {
       loading.value = true;
       error.value = null;
 
-      const response = await authAPI.login(username, password);
-      user.value = response.data.user;
+      await authAPI.login(username, password);
+
+      // После успешного логина получаем данные пользователя
+      const meResponse = await authAPI.getMe();
+      user.value = meResponse.data;
 
       return { success: true };
     } catch (e: any) {
-      const message = e.response?.data?.error || "Ошибка входа";
+      const message =
+        e.response?.data?.detail ||
+        e.response?.data?.error ||
+        e.message ||
+        "Ошибка входа";
       error.value = message;
+      tokenStorage.clearTokens();
       return { success: false, error: message };
     } finally {
       loading.value = false;
@@ -74,6 +91,7 @@ export const useAuthStore = defineStore("auth", () => {
       // Ignore errors
     } finally {
       user.value = null;
+      tokenStorage.clearTokens();
     }
   }
 
@@ -82,13 +100,23 @@ export const useAuthStore = defineStore("auth", () => {
       loading.value = true;
       error.value = null;
 
+      console.log("🔐 Attempting to change password...");
+      console.log("Token exists:", !!tokenStorage.getToken());
+
       await authAPI.changePassword(oldPassword, newPassword);
 
+      console.log("✅ Password changed successfully");
       return { success: true };
     } catch (e: any) {
+      console.error("❌ Password change error:", e);
+      console.error("Error response:", e.response?.data);
+      console.error("Error status:", e.response?.status);
+
       const message =
         e.response?.data?.error ||
         e.response?.data?.new_password?.[0] ||
+        e.response?.data?.detail ||
+        e.message ||
         "Ошибка смены пароля";
       error.value = message;
       return { success: false, error: message };
@@ -121,10 +149,16 @@ export const useAuthStore = defineStore("auth", () => {
 
   async function refreshUser() {
     try {
+      if (!authAPI.checkSession()) {
+        user.value = null;
+        return;
+      }
+
       const response = await authAPI.getMe();
       user.value = response.data;
     } catch (e) {
       user.value = null;
+      tokenStorage.clearTokens();
     }
   }
 

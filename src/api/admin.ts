@@ -1,50 +1,284 @@
 // src/api/admin.ts
 import axios from "axios";
+import type {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? "https://ncb-1.onrender.com/api";
-//http://127.0.0.1:8001/api "https://ncb-r1l6.onrender.com/api"
+  import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000/api";
+
+// ============ SECURITY CONSTANTS ============
+const TOKEN_KEY = "admin_token";
+const REFRESH_KEY = "admin_refresh";
+const REQUEST_TIMEOUT = 30000; // 30 seconds
+const RATE_LIMIT_DELAY = 1000; // 1 second between requests
+
+// ============ RATE LIMITER ============
+class RateLimiter {
+  private lastRequest = 0;
+
+  async wait() {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequest;
+
+    if (timeSinceLastRequest < RATE_LIMIT_DELAY) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, RATE_LIMIT_DELAY - timeSinceLastRequest)
+      );
+    }
+
+    this.lastRequest = Date.now();
+  }
+}
+
+const rateLimiter = new RateLimiter();
+
+// ============ SECURE TOKEN STORAGE ============
+const tokenStorage = {
+  setTokens(access: string, refresh?: string) {
+    sessionStorage.setItem(TOKEN_KEY, access);
+    if (refresh) sessionStorage.setItem(REFRESH_KEY, refresh);
+  },
+
+  getToken(): string | null {
+    return sessionStorage.getItem(TOKEN_KEY);
+  },
+
+  getRefreshToken(): string | null {
+    return sessionStorage.getItem(REFRESH_KEY);
+  },
+
+  clearTokens() {
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(REFRESH_KEY);
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+    });
+  },
+
+  isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  },
+};
+
+// ============ AXIOS INSTANCE ============
 const adminApi = axios.create({
   baseURL: API_BASE_URL,
+  timeout: REQUEST_TIMEOUT,
   headers: {
     "Content-Type": "application/json",
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    Pragma: "no-cache",
+    Expires: "0",
   },
-  withCredentials: true, // Для сессий
+  withCredentials: true,
 });
 
-// Interceptor для CSRF токена
-adminApi.interceptors.request.use((config) => {
-  const csrfToken = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("csrftoken="))
-    ?.split("=")[1];
+// ============ REQUEST INTERCEPTOR ============
+adminApi.interceptors.request.use(
+  async (config: InternalAxiosRequestConfig) => {
+    // Rate limiting
+    await rateLimiter.wait();
 
-  if (csrfToken) {
-    config.headers["X-CSRFToken"] = csrfToken;
+    // CSRF Token
+    const csrfToken = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("csrftoken="))
+      ?.split("=")[1];
+
+    if (csrfToken && config.headers) {
+      config.headers["X-CSRFToken"] = csrfToken;
+    }
+
+    // JWT Token
+    const token = tokenStorage.getToken();
+    if (token && config.headers) {
+      if (tokenStorage.isTokenExpired(token)) {
+        const refreshToken = tokenStorage.getRefreshToken();
+        if (refreshToken) {
+          try {
+            const { data } = await axios.post(
+              `${API_BASE_URL}/admin/auth/refresh/`,
+              {
+                refresh: refreshToken,
+              }
+            );
+            tokenStorage.setTokens(data.access);
+            config.headers.Authorization = `Bearer ${data.access}`;
+          } catch {
+            tokenStorage.clearTokens();
+            window.location.href = "/admin/login";
+            return Promise.reject(new Error("Session expired"));
+          }
+        }
+      } else {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ============ RESPONSE INTERCEPTOR ============
+adminApi.interceptors.response.use(
+  (response: AxiosResponse) => {
+    if (!response.data) {
+      console.error("Invalid response: no data");
+      return Promise.reject(new Error("Invalid server response"));
+    }
+    return response;
+  },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      const refreshToken = tokenStorage.getRefreshToken();
+      if (refreshToken) {
+        try {
+          const { data } = await axios.post(
+            `${API_BASE_URL}/admin/auth/refresh/`,
+            {
+              refresh: refreshToken,
+            }
+          );
+          tokenStorage.setTokens(data.access);
+
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${data.access}`;
+          }
+
+          return adminApi(originalRequest);
+        } catch {
+          tokenStorage.clearTokens();
+          window.location.href = "/admin/login";
+        }
+      } else {
+        tokenStorage.clearTokens();
+        window.location.href = "/admin/login";
+      }
+    }
+
+    if (error.response?.status === 429) {
+      console.error("Too many requests - rate limited");
+    }
+
+    console.error("API Error:", {
+      status: error.response?.status,
+      message: error.message,
+      url: originalRequest?.url,
+    });
+
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
-// ============ AUTH API ============
+// ============ HELPER: VALIDATE ID ============
+const validateId = (id: number, resource: string) => {
+  if (!id || id < 1 || !Number.isInteger(id)) {
+    throw new Error(`Invalid ${resource} ID`);
+  }
+};
+
+// ============ AUTH API (SECURE) ============
 export const authAPI = {
-  login: (username: string, password: string) =>
-    adminApi.post("/admin/auth/login/", { username, password }),
+  login: async (username: string, password: string) => {
+    if (!username || !password) {
+      throw new Error("Username and password are required");
+    }
 
-  logout: () => adminApi.post("/admin/auth/logout/"),
+    if (password.length < 8) {
+      throw new Error("Password too short");
+    }
+
+    const response = await adminApi.post("/admin/auth/login/", {
+      username: username.trim(),
+      password,
+    });
+
+    if (response.data.access) {
+      tokenStorage.setTokens(response.data.access, response.data.refresh);
+    }
+
+    return response;
+  },
+
+  logout: async () => {
+    try {
+      await adminApi.post("/admin/auth/logout/");
+    } finally {
+      tokenStorage.clearTokens();
+      window.location.href = "/admin/login";
+    }
+  },
 
   getMe: () => adminApi.get("/admin/auth/me/"),
 
-  changePassword: (oldPassword: string, newPassword: string) =>
-    adminApi.post("/admin/auth/change-password/", {
+  changePassword: (oldPassword: string, newPassword: string) => {
+    console.log("📝 Validating password...");
+
+    if (newPassword.length < 8) {
+      console.error("❌ Password too short");
+      return Promise.reject(new Error("Пароль должен быть минимум 8 символов"));
+    }
+
+    // Упрощенная валидация - только проверка длины
+    console.log("✅ Password validation passed");
+    console.log("📤 Sending password change request...");
+
+    return adminApi.post("/admin/auth/change-password/", {
       old_password: oldPassword,
       new_password: newPassword,
-    }),
+    });
+  },
 
   updateProfile: (data: {
     email?: string;
     first_name?: string;
     last_name?: string;
-  }) => adminApi.patch("/admin/auth/profile/", data),
+  }) => {
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      return Promise.reject(new Error("Invalid email format"));
+    }
+
+    return adminApi.patch("/admin/auth/profile/", data);
+  },
+
+  refreshToken: async () => {
+    const refreshToken = tokenStorage.getRefreshToken();
+    if (!refreshToken) {
+      throw new Error("No refresh token");
+    }
+
+    const { data } = await axios.post(`${API_BASE_URL}/admin/auth/refresh/`, {
+      refresh: refreshToken,
+    });
+
+    tokenStorage.setTokens(data.access);
+    return data;
+  },
+
+  checkSession: () => {
+    const token = tokenStorage.getToken();
+    if (!token || tokenStorage.isTokenExpired(token)) {
+      return false;
+    }
+    return true;
+  },
 };
 
 // ============ STATS API ============
@@ -54,11 +288,14 @@ export const statsAPI = {
 
 // ============ FEATURES/TAGS BY CATEGORY ============
 export const categoryDataAPI = {
-  // Получить features, tags, tagNames, featureValues по категории (как в Django filter_features.js)
-  getByCategory: (categoryId: number) =>
-    adminApi.get("/features-tags-by-category/", {
+  getByCategory: (categoryId: number) => {
+    if (!categoryId || categoryId < 1) {
+      return Promise.reject(new Error("Invalid category ID"));
+    }
+    return adminApi.get("/features-tags-by-category/", {
       params: { category: categoryId },
-    }),
+    });
+  },
 };
 
 // ============ CATEGORIES API ============
@@ -66,19 +303,34 @@ export const categoriesAdminAPI = {
   getAll: (params?: { search?: string; parent?: string | number }) =>
     adminApi.get("/admin/categories/", { params }),
 
-  getById: (id: number) => adminApi.get(`/admin/categories/${id}/`),
+  getById: (id: number) => {
+    validateId(id, "category");
+    return adminApi.get(`/admin/categories/${id}/`);
+  },
 
   create: (data: any) => adminApi.post("/admin/categories/", data),
 
-  update: (id: number, data: any) =>
-    adminApi.patch(`/admin/categories/${id}/`, data),
+  update: (id: number, data: any) => {
+    validateId(id, "category");
+    return adminApi.patch(`/admin/categories/${id}/`, data);
+  },
 
-  delete: (id: number) => adminApi.delete(`/admin/categories/${id}/`),
+  delete: (id: number) => {
+    validateId(id, "category");
+    return adminApi.delete(`/admin/categories/${id}/`);
+  },
 
-  uploadImage: (id: number, formData: FormData) =>
-    adminApi.post(`/admin/categories/${id}/upload-image/`, formData, {
+  uploadImage: (id: number, formData: FormData) => {
+    validateId(id, "category");
+    const file = formData.get("image") as File;
+    if (file && file.size > 5 * 1024 * 1024) {
+      return Promise.reject(new Error("File too large (max 5MB)"));
+    }
+
+    return adminApi.post(`/admin/categories/${id}/upload-image/`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
-    }),
+    });
+  },
 };
 
 // ============ BRANDS API ============
@@ -86,19 +338,34 @@ export const brandsAdminAPI = {
   getAll: (params?: { search?: string }) =>
     adminApi.get("/admin/brands/", { params }),
 
-  getById: (id: number) => adminApi.get(`/admin/brands/${id}/`),
+  getById: (id: number) => {
+    validateId(id, "brand");
+    return adminApi.get(`/admin/brands/${id}/`);
+  },
 
   create: (data: any) => adminApi.post("/admin/brands/", data),
 
-  update: (id: number, data: any) =>
-    adminApi.patch(`/admin/brands/${id}/`, data),
+  update: (id: number, data: any) => {
+    validateId(id, "brand");
+    return adminApi.patch(`/admin/brands/${id}/`, data);
+  },
 
-  delete: (id: number) => adminApi.delete(`/admin/brands/${id}/`),
+  delete: (id: number) => {
+    validateId(id, "brand");
+    return adminApi.delete(`/admin/brands/${id}/`);
+  },
 
-  uploadLogo: (id: number, formData: FormData) =>
-    adminApi.post(`/admin/brands/${id}/upload-logo/`, formData, {
+  uploadLogo: (id: number, formData: FormData) => {
+    validateId(id, "brand");
+    const file = formData.get("logo") as File;
+    if (file && file.size > 2 * 1024 * 1024) {
+      return Promise.reject(new Error("Logo too large (max 2MB)"));
+    }
+
+    return adminApi.post(`/admin/brands/${id}/upload-logo/`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
-    }),
+    });
+  },
 };
 
 // ============ TAGS API ============
@@ -106,13 +373,22 @@ export const tagsAdminAPI = {
   getAll: (params?: { search?: string; category?: number }) =>
     adminApi.get("/admin/tags/", { params }),
 
-  getById: (id: number) => adminApi.get(`/admin/tags/${id}/`),
+  getById: (id: number) => {
+    validateId(id, "tag");
+    return adminApi.get(`/admin/tags/${id}/`);
+  },
 
   create: (data: any) => adminApi.post("/admin/tags/", data),
 
-  update: (id: number, data: any) => adminApi.patch(`/admin/tags/${id}/`, data),
+  update: (id: number, data: any) => {
+    validateId(id, "tag");
+    return adminApi.patch(`/admin/tags/${id}/`, data);
+  },
 
-  delete: (id: number) => adminApi.delete(`/admin/tags/${id}/`),
+  delete: (id: number) => {
+    validateId(id, "tag");
+    return adminApi.delete(`/admin/tags/${id}/`);
+  },
 };
 
 // ============ TAG NAMES API ============
@@ -120,14 +396,22 @@ export const tagNamesAdminAPI = {
   getAll: (params?: { search?: string; category?: number }) =>
     adminApi.get("/admin/tag-names/", { params }),
 
-  getById: (id: number) => adminApi.get(`/admin/tag-names/${id}/`),
+  getById: (id: number) => {
+    validateId(id, "tag name");
+    return adminApi.get(`/admin/tag-names/${id}/`);
+  },
 
   create: (data: any) => adminApi.post("/admin/tag-names/", data),
 
-  update: (id: number, data: any) =>
-    adminApi.patch(`/admin/tag-names/${id}/`, data),
+  update: (id: number, data: any) => {
+    validateId(id, "tag name");
+    return adminApi.patch(`/admin/tag-names/${id}/`, data);
+  },
 
-  delete: (id: number) => adminApi.delete(`/admin/tag-names/${id}/`),
+  delete: (id: number) => {
+    validateId(id, "tag name");
+    return adminApi.delete(`/admin/tag-names/${id}/`);
+  },
 };
 
 // ============ FEATURES API ============
@@ -135,14 +419,22 @@ export const featuresAdminAPI = {
   getAll: (params?: { search?: string; category?: number }) =>
     adminApi.get("/admin/features/", { params }),
 
-  getById: (id: number) => adminApi.get(`/admin/features/${id}/`),
+  getById: (id: number) => {
+    validateId(id, "feature");
+    return adminApi.get(`/admin/features/${id}/`);
+  },
 
   create: (data: any) => adminApi.post("/admin/features/", data),
 
-  update: (id: number, data: any) =>
-    adminApi.patch(`/admin/features/${id}/`, data),
+  update: (id: number, data: any) => {
+    validateId(id, "feature");
+    return adminApi.patch(`/admin/features/${id}/`, data);
+  },
 
-  delete: (id: number) => adminApi.delete(`/admin/features/${id}/`),
+  delete: (id: number) => {
+    validateId(id, "feature");
+    return adminApi.delete(`/admin/features/${id}/`);
+  },
 };
 
 // ============ FEATURE VALUES API ============
@@ -150,14 +442,22 @@ export const featureValuesAdminAPI = {
   getAll: (params?: { search?: string; category?: number }) =>
     adminApi.get("/admin/feature-values/", { params }),
 
-  getById: (id: number) => adminApi.get(`/admin/feature-values/${id}/`),
+  getById: (id: number) => {
+    validateId(id, "feature value");
+    return adminApi.get(`/admin/feature-values/${id}/`);
+  },
 
   create: (data: any) => adminApi.post("/admin/feature-values/", data),
 
-  update: (id: number, data: any) =>
-    adminApi.patch(`/admin/feature-values/${id}/`, data),
+  update: (id: number, data: any) => {
+    validateId(id, "feature value");
+    return adminApi.patch(`/admin/feature-values/${id}/`, data);
+  },
 
-  delete: (id: number) => adminApi.delete(`/admin/feature-values/${id}/`),
+  delete: (id: number) => {
+    validateId(id, "feature value");
+    return adminApi.delete(`/admin/feature-values/${id}/`);
+  },
 };
 
 // ============ NEWS API ============
@@ -165,13 +465,22 @@ export const newsAdminAPI = {
   getAll: (params?: { search?: string; is_published?: boolean }) =>
     adminApi.get("/admin/news/", { params }),
 
-  getById: (id: number) => adminApi.get(`/admin/news/${id}/`),
+  getById: (id: number) => {
+    validateId(id, "news");
+    return adminApi.get(`/admin/news/${id}/`);
+  },
 
   create: (data: any) => adminApi.post("/admin/news/", data),
 
-  update: (id: number, data: any) => adminApi.patch(`/admin/news/${id}/`, data),
+  update: (id: number, data: any) => {
+    validateId(id, "news");
+    return adminApi.patch(`/admin/news/${id}/`, data);
+  },
 
-  delete: (id: number) => adminApi.delete(`/admin/news/${id}/`),
+  delete: (id: number) => {
+    validateId(id, "news");
+    return adminApi.delete(`/admin/news/${id}/`);
+  },
 };
 
 // ============ IMAGES API ============
@@ -181,20 +490,22 @@ export const imagesAdminAPI = {
 
   create: (data: any) => adminApi.post("/admin/images/", data),
 
-  update: (id: number, data: any) =>
-    adminApi.patch(`/admin/images/${id}/`, data),
+  update: (id: number, data: any) => {
+    validateId(id, "image");
+    return adminApi.patch(`/admin/images/${id}/`, data);
+  },
 
-  delete: (id: number) => adminApi.delete(`/admin/images/${id}/`),
+  delete: (id: number) => {
+    validateId(id, "image");
+    return adminApi.delete(`/admin/images/${id}/`);
+  },
 };
 
 // ============ SETTINGS API ============
 export const settingsAdminAPI = {
   getAbout: () => adminApi.get("/admin/about/"),
-
   updateAbout: (data: any) => adminApi.put("/admin/about/", data),
-
   getContact: () => adminApi.get("/admin/contact/"),
-
   updateContact: (data: any) => adminApi.put("/admin/contact/", data),
 };
 
@@ -203,15 +514,25 @@ export const messagesAdminAPI = {
   getAll: (params?: { is_processed?: boolean }) =>
     adminApi.get("/admin/messages/", { params }),
 
-  getById: (id: number) => adminApi.get(`/admin/messages/${id}/`),
+  getById: (id: number) => {
+    validateId(id, "message");
+    return adminApi.get(`/admin/messages/${id}/`);
+  },
 
-  markProcessed: (id: number) =>
-    adminApi.post(`/admin/messages/${id}/mark-processed/`),
+  markProcessed: (id: number) => {
+    validateId(id, "message");
+    return adminApi.post(`/admin/messages/${id}/mark-processed/`);
+  },
 
-  markUnprocessed: (id: number) =>
-    adminApi.post(`/admin/messages/${id}/mark-unprocessed/`),
+  markUnprocessed: (id: number) => {
+    validateId(id, "message");
+    return adminApi.post(`/admin/messages/${id}/mark-unprocessed/`);
+  },
 
-  delete: (id: number) => adminApi.delete(`/admin/messages/${id}/`),
+  delete: (id: number) => {
+    validateId(id, "message");
+    return adminApi.delete(`/admin/messages/${id}/`);
+  },
 };
 
 // ============ PRODUCTS API ============
@@ -226,22 +547,43 @@ export const productsAdminAPI = {
     page_size?: number;
   }) => adminApi.get("/admin/products/", { params }),
 
-  getById: (id: number) => adminApi.get(`/admin/products/${id}/`),
+  getById: (id: number) => {
+    validateId(id, "product");
+    return adminApi.get(`/admin/products/${id}/`);
+  },
 
   create: (data: any) => adminApi.post("/admin/products/", data),
 
-  update: (id: number, data: any) =>
-    adminApi.patch(`/admin/products/${id}/`, data),
+  update: (id: number, data: any) => {
+    validateId(id, "product");
+    return adminApi.patch(`/admin/products/${id}/`, data);
+  },
 
-  delete: (id: number) => adminApi.delete(`/admin/products/${id}/`),
+  delete: (id: number) => {
+    validateId(id, "product");
+    return adminApi.delete(`/admin/products/${id}/`);
+  },
 
-  uploadImage: (id: number, formData: FormData) =>
-    adminApi.post(`/admin/products/${id}/upload-image/`, formData, {
+  uploadImage: (id: number, formData: FormData) => {
+    validateId(id, "product");
+    const file = formData.get("image") as File;
+    if (file && file.size > 10 * 1024 * 1024) {
+      return Promise.reject(new Error("Image too large (max 10MB)"));
+    }
+
+    return adminApi.post(`/admin/products/${id}/upload-image/`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
-    }),
+    });
+  },
 
-  deleteImage: (productId: number, imageId: number) =>
-    adminApi.delete(`/admin/products/${productId}/delete-image/${imageId}/`),
+  deleteImage: (productId: number, imageId: number) => {
+    validateId(productId, "product");
+    validateId(imageId, "image");
+    return adminApi.delete(
+      `/admin/products/${productId}/delete-image/${imageId}/`
+    );
+  },
 };
 
 export default adminApi;
+export { tokenStorage };

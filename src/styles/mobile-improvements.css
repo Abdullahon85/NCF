@@ -1,0 +1,457 @@
+/* ============================================
+   ДОПОЛНИТЕЛЬНАЯ МОБИЛЬНАЯ ОПТИМИЗАЦИЯ
+   ============================================ */
+
+/* Touch-friendly стили */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: rgba(27, 67, 50, 0.1);
+    -webkit-touch-callout: none;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: rgba(27, 67, 50, 0.2);
+  }
+
+  /* Увеличение кликабельных зон */
+  button,
+  .btn,
+  a.btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  input[type="checkbox"] {
+    min-width: 20px;
+    min-height: 20px;
+  }
+
+  /* Анимация бургер-меню */
+  .mobile-menu-toggle[aria-expanded="true"] span:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+  }
+
+  .mobile-menu-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu-toggle[aria-expanded="true"] span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+  }
+
+  /* Затемнение фона при открытом меню */
+  .nav-menu.active::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* Улучшение производительности */
+@media (max-width: 768px) {
+  .product-card,
+  .category-card,
+  .brand-card {
+    will-change: transform;
+  }
+
+  img {
+    will-change: auto;
+  }
+}
+
+/* Улучшение категорий на мобильных */
+@media (max-width: 640px) {
+  .categories-grid {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-4);
+  }
+
+  .category-card .card-image {
+    height: 180px;
+  }
+
+  .category-card .card-content {
+    padding: var(--space-5) var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .category-card .card-image {
+    height: 160px;
+  }
+
+  .category-card .card-content h3 {
+    font-size: var(--text-base);
+  }
+}
+
+/* Улучшение топбара на мобильных */
+@media (max-width: 640px) {
+  .topbar {
+    padding: var(--space-3) var(--space-4) !important;
+    gap: var(--space-3);
+  }
+
+  .sort {
+    width: 100%;
+  }
+
+  .sort select {
+    flex: 1;
+  }
+
+  .search-bar {
+    width: 100%;
+  }
+
+  .only-available {
+    width: 100%;
+  }
+}
+
+/* Улучшение деталей товара */
+@media (max-width: 640px) {
+  .product-detail-page {
+    padding: var(--space-3) 0 !important;
+  }
+
+  .breadcrumb {
+    font-size: 11px !important;
+    gap: var(--space-1) !important;
+  }
+
+  .breadcrumb-item svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .product-layout {
+    padding: var(--space-3) !important;
+    gap: var(--space-5) !important;
+  }
+
+  .product-title {
+    font-size: 1.25rem !important;
+  }
+
+  .price-section {
+    padding: var(--space-4) !important;
+  }
+
+  .price-value {
+    font-size: 1.75rem !important;
+  }
+
+  .product-meta-row {
+    gap: var(--space-2) !important;
+  }
+
+  .feature-item {
+    padding: var(--space-2) !important;
+  }
+
+  .feature-name,
+  .feature-value {
+    font-size: 12px !important;
+  }
+
+  .description-section,
+  .features-section {
+    padding: var(--space-4) !important;
+  }
+
+  .section-title {
+    font-size: var(--text-lg) !important;
+  }
+
+  .modal-content {
+    padding: var(--space-5) !important;
+  }
+
+  .modal-title {
+    font-size: var(--text-xl) !important;
+  }
+}
+
+/* Улучшение галереи изображений */
+@media (max-width: 640px) {
+  .image-gallery {
+    gap: var(--space-2) !important;
+  }
+
+  .main-image-wrapper,
+  .gallery-main {
+    height: 280px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .thumbnail {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  .thumbnails {
+    gap: var(--space-2) !important;
+    padding: var(--space-2) 0 !important;
+  }
+
+  .zoom-hint {
+    font-size: 11px !important;
+    padding: var(--space-2) var(--space-3) !important;
+  }
+
+  .zoom-hint svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* Fullscreen на мобильных */
+  .fullscreen-overlay {
+    padding: 0 !important;
+  }
+
+  .fullscreen-image {
+    max-width: 100% !important;
+    max-height: 80vh !important;
+    object-fit: contain !important;
+  }
+
+  .fullscreen-close {
+    top: var(--space-3) !important;
+    right: var(--space-3) !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .nav-arrow {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .nav-arrow.left {
+    left: var(--space-2) !important;
+  }
+
+  .nav-arrow.right {
+    right: var(--space-2) !important;
+  }
+
+  .fullscreen-thumbnails {
+    padding: var(--space-3) !important;
+    gap: var(--space-2) !important;
+  }
+
+  .fullscreen-thumbnail {
+    width: 50px !important;
+    height: 50px !important;
+  }
+}
+
+/* Секции на главной */
+@media (max-width: 640px) {
+  .featured-categories,
+  .featured-brands {
+    padding: var(--space-10) 0 !important;
+  }
+
+  .categories-title,
+  .brands-title {
+    font-size: 1.5rem !important;
+    margin-bottom: var(--space-6) !important;
+  }
+
+  .categories-title::after,
+  .brands-title::after {
+    width: 60px !important;
+  }
+
+  .brands-footer {
+    margin-top: var(--space-6) !important;
+    padding-top: var(--space-6) !important;
+  }
+
+  .brands-link {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: var(--space-4) var(--space-6) !important;
+    font-size: var(--text-sm) !important;
+  }
+}
+
+/* Hero секция */
+@media (max-width: 640px) {
+  .hero {
+    min-height: 40vh !important;
+    padding: var(--space-8) 0 !important;
+  }
+
+  .cta-button {
+    border-radius: var(--radius-lg) !important;
+  }
+}
+
+/* Фильтры */
+@media (max-width: 640px) {
+  .panel {
+    padding: var(--space-4) !important;
+  }
+
+  .filter-group > label {
+    font-size: 12px !important;
+  }
+
+  .brand-item,
+  .tag-item {
+    padding: var(--space-2) !important;
+    font-size: 13px !important;
+  }
+}
+
+/* Пагинация */
+@media (max-width: 640px) {
+  .pagination {
+    gap: var(--space-2) !important;
+  }
+
+  .pagination button {
+    min-width: 36px !important;
+    height: 36px !important;
+    font-size: 13px !important;
+    padding: 0 var(--space-2) !important;
+  }
+}
+
+/* Футер */
+@media (max-width: 640px) {
+  .footer {
+    padding: var(--space-8) 0 var(--space-6) !important;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-6) !important;
+  }
+
+  .footer-section h3 {
+    font-size: var(--text-base) !important;
+  }
+
+  .footer-bottom {
+    flex-direction: column !important;
+    gap: var(--space-3) !important;
+    text-align: center !important;
+  }
+}
+
+/* Карточки брендов */
+@media (max-width: 640px) {
+  .brand-card {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding: var(--space-4) !important;
+  }
+
+  .brand-image {
+    width: 80px !important;
+    height: 80px !important;
+  }
+}
+
+/* Общие улучшения */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  .btn {
+    padding: var(--space-3) var(--space-5) !important;
+    font-size: var(--text-sm) !important;
+  }
+
+  .loading-state,
+  .error-state,
+  .empty-state {
+    min-height: 300px !important;
+    padding: var(--space-6) !important;
+  }
+
+  /* Формы и инпуты */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important; /* Предотвращает зум на iOS */
+    padding: var(--space-3) var(--space-4) !important;
+  }
+
+  textarea {
+    min-height: 120px !important;
+  }
+
+  /* Улучшение кнопок */
+  .btn-primary,
+  .btn-secondary {
+    font-size: var(--text-base) !important;
+    padding: var(--space-4) var(--space-6) !important;
+  }
+
+  /* Модальные окна */
+  .modal-overlay {
+    padding: var(--space-4) !important;
+  }
+
+  .modal-content {
+    max-width: 100% !important;
+    margin: auto !important;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 380px) {
+  .product-info {
+    padding: var(--space-2) !important;
+  }
+
+  .product-name {
+    font-size: 12px !important;
+  }
+
+  .product-price {
+    font-size: 13px !important;
+  }
+
+  .btn-view {
+    width: 28px !important;
+    height: 28px !important;
+  }
+}

@@ -43,17 +43,17 @@
         </thead>
         <tbody>
           <tr v-for="item in items" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>
+            <td data-label="ID">{{ item.id }}</td>
+            <td data-label="Изображение">
               <img v-if="item.image" :src="item.image" class="thumb" alt="" />
               <span v-else class="no-image">—</span>
             </td>
-            <td class="name-cell">{{ item.name }}</td>
-            <td class="slug-cell">{{ item.slug }}</td>
-            <td>{{ item.parent_name || "—" }}</td>
-            <td>{{ item.order }}</td>
-            <td>{{ item.products_count }}</td>
-            <td>
+            <td data-label="Название" class="name-cell">{{ item.name }}</td>
+            <td data-label="Slug" class="slug-cell">{{ item.slug }}</td>
+            <td data-label="Родитель">{{ item.parent_name || "—" }}</td>
+            <td data-label="Порядок">{{ item.order }}</td>
+            <td data-label="Товаров">{{ item.products_count }}</td>
+            <td data-label="Действия">
               <div class="actions">
                 <button
                   @click="editItem(item)"
@@ -119,6 +119,41 @@
             <label>Порядок сортировки</label>
             <input v-model.number="form.order" type="number" min="0" />
           </div>
+
+          <!-- Image Upload Section -->
+          <div class="form-group">
+            <label>Изображение категории</label>
+            <div class="image-upload-container">
+              <div
+                v-if="imagePreview || editingItem?.image"
+                class="image-preview"
+              >
+                <img :src="imagePreview || editingItem?.image" alt="Preview" />
+                <button
+                  type="button"
+                  @click="removeImage"
+                  class="remove-image-btn"
+                  title="Удалить изображение"
+                >
+                  ✕
+                </button>
+              </div>
+              <div v-else class="upload-placeholder">
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  @change="handleImageSelect"
+                  class="file-input"
+                  id="imageInput"
+                />
+                <label for="imageInput" class="upload-label">
+                  📷 Выбрать изображение
+                </label>
+              </div>
+            </div>
+          </div>
+
           <div v-if="error" class="error-msg">{{ error }}</div>
           <div class="modal-actions">
             <button type="button" @click="closeModal" class="btn btn-secondary">
@@ -200,6 +235,11 @@ const form = reactive({
   parent: null as number | null,
   order: 0,
 });
+
+// Image upload state
+const imagePreview = ref("");
+const selectedImageFile = ref<File | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
 
 // Delete state
 const showDeleteModal = ref(false);
@@ -300,6 +340,8 @@ function openCreateModal() {
   form.parent = null;
   form.order = 0;
   error.value = "";
+  imagePreview.value = "";
+  selectedImageFile.value = null;
   showModal.value = true;
 }
 
@@ -310,12 +352,47 @@ function editItem(item: Category) {
   form.parent = item.parent;
   form.order = item.order;
   error.value = "";
+  imagePreview.value = "";
+  selectedImageFile.value = null;
   showModal.value = true;
 }
 
 function closeModal() {
   showModal.value = false;
   editingItem.value = null;
+  imagePreview.value = "";
+  selectedImageFile.value = null;
+}
+
+function handleImageSelect(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+
+  if (file) {
+    selectedImageFile.value = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreview.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function removeImage() {
+  imagePreview.value = "";
+  selectedImageFile.value = null;
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
+}
+
+async function uploadImage(categoryId: number): Promise<void> {
+  if (!selectedImageFile.value) return;
+
+  const formData = new FormData();
+  formData.append("image", selectedImageFile.value);
+
+  await categoriesAdminAPI.uploadImage(categoryId, formData);
 }
 
 async function saveItem() {
@@ -330,10 +407,19 @@ async function saveItem() {
       order: form.order,
     };
 
+    let categoryId: number;
+
     if (editingItem.value) {
       await categoriesAdminAPI.update(editingItem.value.id, data);
+      categoryId = editingItem.value.id;
     } else {
-      await categoriesAdminAPI.create(data);
+      const response = await categoriesAdminAPI.create(data);
+      categoryId = response.data.id;
+    }
+
+    // Upload image if selected
+    if (selectedImageFile.value) {
+      await uploadImage(categoryId);
     }
 
     closeModal();

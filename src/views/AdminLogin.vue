@@ -59,10 +59,11 @@
 
 <script setup lang="ts">
 import { ref, reactive } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 const form = reactive({
@@ -80,11 +81,11 @@ async function handleLogin() {
 
   const result = await authStore.login(form.username, form.password);
 
-  loading.value = false;
-
   if (result.success) {
-    router.push("/admin");
+    const redirect = (route.query.redirect as string) || "/admin";
+    window.location.href = redirect;
   } else {
+    loading.value = false;
     error.value = result.error || "Ошибка входа";
   }
 }

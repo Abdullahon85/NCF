@@ -18,8 +18,8 @@ import type {
 } from "@/types";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? "https://ncb-1.onrender.com/api";
-//   "http://127.0.0.1:8001/api" "https://ncb-r1l6.onrender.com/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
+  import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000/api' ;
+//   "http://127.0.0.1:8001/api" "https://ncb-1.onrender.com/api" "https://ncb-r1l6.onrender.com/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -27,9 +27,35 @@ const api = axios.create({
   },
 });
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
+// Helper function to delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const config = error.config;
+    
+    // Handle 429 Too Many Requests with retry
+    if (error.response?.status === 429) {
+      config._retryCount = config._retryCount || 0;
+      
+      if (config._retryCount < MAX_RETRIES) {
+        config._retryCount++;
+        const retryDelay = RETRY_DELAY * config._retryCount;
+        
+        console.warn(`Rate limit hit. Retrying in ${retryDelay}ms... (Attempt ${config._retryCount}/${MAX_RETRIES})`);
+        
+        await delay(retryDelay);
+        return api(config);
+      } else {
+        console.error("Max retries reached for rate-limited request");
+      }
+    }
+    
     console.error("API Error:", error);
     return Promise.reject(error);
   }

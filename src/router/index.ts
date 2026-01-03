@@ -156,7 +156,7 @@ const router = createRouter({
 });
 
 // Navigation guards
-router.beforeEach(async (to, _from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
   // Initialize auth state
@@ -164,15 +164,16 @@ router.beforeEach(async (to, _from, next) => {
     await authStore.init();
   }
 
-  // Check if route requires auth
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next({ name: "AdminLogin", query: { redirect: to.fullPath } });
+  // If authenticated and trying to access login page, redirect to admin
+  if (to.name === "AdminLogin" && authStore.isAuthenticated) {
+    const redirect = (to.query.redirect as string) || "/admin";
+    next(redirect);
     return;
   }
 
-  // Check if route requires guest (login page)
-  if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next({ name: "AdminDashboard" });
+  // Check if route requires auth
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next({ name: "AdminLogin", query: { redirect: to.fullPath } });
     return;
   }
 

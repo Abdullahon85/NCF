@@ -1,30 +1,36 @@
 <template>
   <div class="clients-section">
-    <div class="container">
-      <div class="slider-wrapper" @mouseenter="pause" @mouseleave="resume">
-        <button class="nav-btn left" @click="prev">‹</button>
+    <div class="slider-wrapper" @mouseenter="pause" @mouseleave="resume">
+      <button class="nav-btn left" @click="prev" aria-label="Предыдущий">
+        ‹
+      </button>
 
-        <div class="clients-track" :style="trackStyle">
-          <div
-            v-for="(brand, index) in loopedBrands"
-            :key="index"
-            class="client-logo"
-          >
-            <router-link :to="`/brands/${brand.slug}`">
-              <template v-if="brand.image">
-                <img :src="getImageUrl(brand.image)" :alt="brand.name" />
-              </template>
-              <template v-else>
-                <div class="brand-placeholder">
-                  {{ brand.name ? brand.name.charAt(0).toUpperCase() : "?" }}
-                </div>
-              </template>
-            </router-link>
-          </div>
+      <div class="clients-track" :style="trackStyle">
+        <div
+          v-for="(brand, index) in loopedBrands"
+          :key="`${brand.id || brand.slug}-${index}`"
+          class="client-logo"
+        >
+          <router-link :to="`/brands/${brand.slug}`">
+            <template v-if="brand.image">
+              <img
+                :src="getImageUrl(brand.image)"
+                :alt="brand.name"
+                loading="lazy"
+              />
+            </template>
+            <template v-else>
+              <div class="brand-placeholder">
+                {{ brand.name ? brand.name.charAt(0).toUpperCase() : "?" }}
+              </div>
+            </template>
+          </router-link>
         </div>
-
-        <button class="nav-btn right" @click="next">›</button>
       </div>
+
+      <button class="nav-btn right" @click="next" aria-label="Следующий">
+        ›
+      </button>
     </div>
   </div>
 </template>
@@ -36,36 +42,61 @@ import { getImageUrl } from "@/api";
 
 const props = defineProps<{ brands: Brand[] }>();
 
-// дублируем чтобы было бесконечно
-const loopedBrands = computed(() => [...props.brands, ...props.brands]);
+// Дублируем для бесконечной прокрутки
+const loopedBrands = computed(() => {
+  if (props.brands.length === 0) return [];
+  return [...props.brands, ...props.brands, ...props.brands];
+});
 
 const current = ref(0);
-const visible = 6; // сколько логотипов видно
-const autoplaySpeed = 2000; // 2 сек
+const autoplaySpeed = 3000;
 let interval: any = null;
+let isTransitioning = false;
 
-// стиль смещения
-const trackStyle = computed(() => ({
-  transform: `translateX(-${current.value * (100 / visible)}%)`,
-  transition: "transform 0.4s ease",
-}));
+// Стиль смещения - используем calc для точного позиционирования
+const trackStyle = computed(() => {
+  const itemWidth = `calc((100% / 6))`;
+  return {
+    transform: `translateX(calc(-${current.value} * ${itemWidth}))`,
+    transition: isTransitioning
+      ? "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
+      : "none",
+  };
+});
 
 function next() {
+  if (props.brands.length === 0) return;
+
+  isTransitioning = true;
   current.value++;
+
+  // Когда доходим до конца первой копии, возвращаемся к началу
   if (current.value >= props.brands.length) {
-    // быстрый ресет без анимации
-    current.value = 0;
+    setTimeout(() => {
+      isTransitioning = false;
+      current.value = 0;
+    }, 500);
   }
 }
 
 function prev() {
-  current.value--;
-  if (current.value < 0) {
-    current.value = props.brands.length - 1;
+  if (props.brands.length === 0) return;
+
+  if (current.value === 0) {
+    isTransitioning = false;
+    current.value = props.brands.length;
+    setTimeout(() => {
+      isTransitioning = true;
+      current.value--;
+    }, 10);
+  } else {
+    isTransitioning = true;
+    current.value--;
   }
 }
 
 function startAutoplay() {
+  if (props.brands.length === 0) return;
   interval = setInterval(next, autoplaySpeed);
 }
 
@@ -77,12 +108,13 @@ function resume() {
   startAutoplay();
 }
 
-// автозапуск
 onMounted(() => {
   startAutoplay();
 });
 
-onUnmounted(() => clearInterval(interval));
+onUnmounted(() => {
+  clearInterval(interval);
+});
 </script>
 
 <!-- Styles in main.css -->

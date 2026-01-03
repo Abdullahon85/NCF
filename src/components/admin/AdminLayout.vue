@@ -1,7 +1,10 @@
 <template>
   <div class="admin-layout">
     <!-- Sidebar -->
-    <aside class="admin-sidebar" :class="{ collapsed: sidebarCollapsed }">
+    <aside
+      class="admin-sidebar"
+      :class="{ collapsed: sidebarCollapsed, 'mobile-open': mobileMenuOpen }"
+    >
       <div class="sidebar-header">
         <h2 v-if="!sidebarCollapsed">🎛️ Админ</h2>
         <button
@@ -19,6 +22,7 @@
           :to="item.path"
           class="nav-item"
           :class="{ active: isActive(item.path) }"
+          @click="closeMobileMenu"
         >
           <span class="nav-icon">{{ item.icon }}</span>
           <span v-if="!sidebarCollapsed" class="nav-label">{{
@@ -31,18 +35,32 @@
       </nav>
 
       <div class="sidebar-footer">
-        <router-link to="/" class="nav-item">
+        <router-link to="/" class="nav-item" @click="closeMobileMenu">
           <span class="nav-icon">🌐</span>
           <span v-if="!sidebarCollapsed" class="nav-label">На сайт</span>
         </router-link>
       </div>
     </aside>
 
+    <!-- Mobile Menu Overlay -->
+    <div
+      v-if="mobileMenuOpen"
+      class="mobile-overlay"
+      @click="closeMobileMenu"
+    ></div>
+
     <!-- Main Content -->
     <div class="admin-main" :class="{ expanded: sidebarCollapsed }">
       <!-- Header -->
       <header class="admin-header">
         <div class="header-left">
+          <button
+            class="mobile-menu-toggle"
+            @click="toggleMobileMenu"
+            aria-label="Toggle menu"
+          >
+            {{ mobileMenuOpen ? "✕" : "☰" }}
+          </button>
           <h1>{{ currentPageTitle }}</h1>
         </div>
         <div class="header-right">
@@ -88,6 +106,7 @@ const authStore = useAuthStore();
 const sidebarCollapsed = ref(false);
 const showUserMenu = ref(false);
 const unreadMessages = ref(0);
+const mobileMenuOpen = ref(false);
 
 const menuItems = computed(() => [
   { path: "/admin", label: "Dashboard", icon: "📊" },
@@ -142,6 +161,20 @@ function isActive(path: string) {
 async function handleLogout() {
   await authStore.logout();
   router.push("/admin/login");
+}
+
+function toggleMobileMenu() {
+  mobileMenuOpen.value = !mobileMenuOpen.value;
+  if (mobileMenuOpen.value) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "";
+  }
+}
+
+function closeMobileMenu() {
+  mobileMenuOpen.value = false;
+  document.body.style.overflow = "";
 }
 
 function handleClickOutside(event: MouseEvent) {
