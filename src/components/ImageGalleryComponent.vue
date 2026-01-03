@@ -152,7 +152,8 @@ const selectedImageUrl = ref<string>("");
 const fullscreenMode = ref(false);
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL?.replace("/api", "") ?? "http://127.0.0.1:8000";
+  import.meta.env.VITE_API_URL?.replace("/api", "") ??
+  "https://ncb-1.onrender.com";
 
 const getImageUrl = (imgPath: string | undefined): string => {
   if (!imgPath) return "";

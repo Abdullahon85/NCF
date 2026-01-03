@@ -156,7 +156,7 @@ const router = createRouter({
 });
 
 // Navigation guards
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
 
   // Initialize auth state

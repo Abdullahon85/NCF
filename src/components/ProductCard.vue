@@ -90,7 +90,8 @@ const router = useRouter();
 const imageError = ref(false);
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL?.replace("/api", "") ?? "http://127.0.0.1:8000";
+  import.meta.env.VITE_API_URL?.replace("/api", "") ??
+  "https://ncb-1.onrender.com";
 
 const imageUrl = computed(() => {
   if (imageError.value) return null;

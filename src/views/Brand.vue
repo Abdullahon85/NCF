@@ -198,7 +198,7 @@ const getImageUrl = (path: string): string => {
   if (!path) return "";
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
   let baseUrl = (import.meta.env.VITE_API_URL ||
-    "http://127.0.0.1:8000") as string;
+    "https://ncb-1.onrender.com") as string;
   // if env uses /api as base, strip it so media paths concatenate correctly
   baseUrl = baseUrl.replace(/\/api\/?$/, "");
   return `${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;

@@ -248,7 +248,7 @@
             <div class="error-icon">⚠️</div>
             <h3>Ошибка загрузки</h3>
             <p>{{ error }}</p>
-            <button @click="loadBrands" class="btn-retry">
+            <button @click="() => loadBrands()" class="btn-retry">
               <svg
                 width="16"
                 height="16"
