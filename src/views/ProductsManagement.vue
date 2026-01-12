@@ -268,7 +268,7 @@
                 <div class="image-preview-box">
                   <img
                     v-if="img.preview || img.image"
-                    :src="img.preview || img.image"
+                    :src="(img.preview || img.image) || undefined"
                     alt="Preview"
                   />
                   <span v-else class="no-preview">📷</span>
@@ -882,7 +882,7 @@ async function onCategoryChange() {
 function addImage() {
   form.images.push({
     image: null,
-    preview: null,
+    preview: undefined,
     is_main: form.images.length === 0,
     order: form.images.length,
     _new: true,

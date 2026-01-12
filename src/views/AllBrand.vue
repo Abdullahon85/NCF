@@ -334,11 +334,6 @@ const resetFilters = () => {
   filters.ordering = "name";
   applyFilters();
 };
-  filters.ordering = "name";
-  applyFilters();
-  showFilters.value = falseng = "name";
-  applyFilters();
-};
 
 const changePage = (page: number) => {
   pagination.page = page;

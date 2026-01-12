@@ -87,6 +87,10 @@ const props = defineProps({
     type: Object as PropType<Product>,
     required: true,
   },
+  priority: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const router = useRouter();

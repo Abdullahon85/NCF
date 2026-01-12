@@ -81,7 +81,7 @@
                   class="values-chips"
                 >
                   <span
-                    v-for="(val, idx) in item.values.slice(0, 3)"
+                    v-for="val in item.values.slice(0, 3)"
                     :key="val.id"
                     class="chip"
                     >{{ val.value }}</span
