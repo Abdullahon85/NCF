@@ -8,6 +8,17 @@ export interface Category {
   children: Category[];
   products_count: number;
 }
+
+export interface Banner {
+  id: number;
+  title: string;
+  description: string | null;
+  image: string;
+  link: string | null;
+  order: number;
+  is_active: boolean;
+}
+
 export interface Brand {
   id: number;
   name: string;

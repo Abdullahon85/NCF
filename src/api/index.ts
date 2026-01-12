@@ -15,11 +15,12 @@ import type {
   Brand,
   BrandFilters,
   ProductTagGroup,
+  Banner,
 } from "@/types";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? 'https://ncb-1.onrender.com/api' ;
-//   "http://127.0.0.1:8001/api" "https://ncb-1.onrender.com/api" "https://ncb-r1l6.onrender.com/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
+  import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
+//   "http://127.0.0.1:8000/api" "https://ncb-1.onrender.com/api" "https://ncb-r1l6.onrender.com/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -32,30 +33,32 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
 // Helper function to delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const config = error.config;
-    
+
     // Handle 429 Too Many Requests with retry
     if (error.response?.status === 429) {
       config._retryCount = config._retryCount || 0;
-      
+
       if (config._retryCount < MAX_RETRIES) {
         config._retryCount++;
         const retryDelay = RETRY_DELAY * config._retryCount;
-        
-        console.warn(`Rate limit hit. Retrying in ${retryDelay}ms... (Attempt ${config._retryCount}/${MAX_RETRIES})`);
-        
+
+        console.warn(
+          `Rate limit hit. Retrying in ${retryDelay}ms... (Attempt ${config._retryCount}/${MAX_RETRIES})`
+        );
+
         await delay(retryDelay);
         return api(config);
       } else {
         console.error("Max retries reached for rate-limited request");
       }
     }
-    
+
     console.error("API Error:", error);
     return Promise.reject(error);
   }
@@ -226,6 +229,10 @@ export const tagsAPI = {
     api.get<PaginatedResponse<Tag>>("/tags/", { params }),
 };
 
+export const bannersAPI = {
+  getAll: () => api.get<Banner[]>("/banners/"),
+};
+
 /**
  * Construct full image URL from API path
  * @param path - image path from API (relative or absolute URL)
@@ -236,7 +243,7 @@ export const getImageUrl = (path: string | null): string => {
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
 
   let base = (import.meta.env.VITE_API_URL ||
-    "http://127.0.0.1:8001") as string;
+    "http://localhost:8000") as string;
 
   base = base.replace(/\/api\/?$/, "");
   return `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;

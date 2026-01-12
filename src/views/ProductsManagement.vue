@@ -68,8 +68,8 @@
         </thead>
         <tbody>
           <tr v-for="product in products" :key="product.id">
-            <td>{{ product.id }}</td>
-            <td>
+            <td data-label="ID">{{ product.id }}</td>
+            <td data-label="Фото">
               <img
                 v-if="product.images && product.images[0]"
                 :src="product.images[0].image ?? undefined"
@@ -78,12 +78,12 @@
               />
               <span v-else class="no-image">📷</span>
             </td>
-            <td class="name-cell">{{ product.name }}</td>
-            <td>{{ product.internal_sku || "—" }}</td>
-            <td>{{ product.category_name || "—" }}</td>
-            <td>{{ product.brand_name || "—" }}</td>
-            <td>{{ formatPrice(product.price) }}</td>
-            <td>
+            <td data-label="Название" class="name-cell">{{ product.name }}</td>
+            <td data-label="SKU">{{ product.internal_sku || "—" }}</td>
+            <td data-label="Категория">{{ product.category_name || "—" }}</td>
+            <td data-label="Бренд">{{ product.brand_name || "—" }}</td>
+            <td data-label="Цена">{{ formatPrice(product.price) }}</td>
+            <td data-label="Статус">
               <span
                 :class="[
                   'badge',
@@ -93,7 +93,7 @@
                 {{ product.is_available ? "В наличии" : "Нет" }}
               </span>
             </td>
-            <td>
+            <td data-label="Действия">
               <div class="actions">
                 <button
                   @click="editProduct(product)"
@@ -259,67 +259,48 @@
           <fieldset class="form-fieldset">
             <legend>Изображения товаров</legend>
 
-            <table class="inline-table">
-              <thead>
-                <tr>
-                  <th>Изображение</th>
-                  <th style="width: 120px">Главное</th>
-                  <th style="width: 80px">Порядок</th>
-                  <th style="width: 80px">Удалить?</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(img, idx) in form.images" :key="img.id || idx">
-                  <td>
-                    <div class="image-cell">
-                      <img
-                        v-if="img.image"
-                        :src="img.image"
-                        class="inline-image-preview"
-                        alt=""
-                      />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        @change="(e) => handleImageUpload(e, idx)"
-                        class="file-input"
-                      />
-                    </div>
-                  </td>
-                  <td>
+            <div class="images-grid">
+              <div
+                v-for="(img, idx) in form.images"
+                :key="idx"
+                class="image-item"
+              >
+                <div class="image-preview-box">
+                  <img
+                    v-if="img.preview || img.image"
+                    :src="img.preview || img.image"
+                    alt="Preview"
+                  />
+                  <span v-else class="no-preview">📷</span>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  @change="onFileChange($event, idx)"
+                />
+                <div class="image-controls">
+                  <label>
                     <input
-                      v-model="img.is_main"
                       type="checkbox"
+                      :checked="img.is_main"
                       @change="setMainImage(idx)"
                     />
-                  </td>
-                  <td>
-                    <input
-                      v-model.number="img.order"
-                      type="number"
-                      min="0"
-                      class="order-input"
-                    />
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      @click="removeImage(idx)"
-                      class="btn-remove"
-                    >
-                      Удалить
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <button
-              type="button"
-              @click="addImage"
-              class="btn btn-secondary btn-sm"
-            >
-              ➕ Добавить изображение
-            </button>
+                    Главное
+                  </label>
+                  <button
+                    type="button"
+                    @click="removeImage(idx)"
+                    class="btn-remove-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              <button type="button" @click="addImage" class="add-image-btn">
+                ➕ Добавить фото
+              </button>
+            </div>
           </fieldset>
 
           <!-- ========== ХАРАКТЕРИСТИКИ ТОВАРОВ ========== -->
@@ -340,8 +321,11 @@
               </thead>
               <tbody>
                 <tr v-for="(feat, idx) in form.features" :key="idx">
-                  <td>
-                    <select v-model="feat.feature_id">
+                  <td data-label="Характеристика">
+                    <select
+                      v-model="feat.feature_id"
+                      @change="onFeatureChange(idx)"
+                    >
                       <option :value="null">---------</option>
                       <option
                         v-for="f in categoryFeatures"
@@ -352,11 +336,20 @@
                       </option>
                     </select>
                   </td>
-                  <td>
-                    <select v-model="feat.value_id">
-                      <option :value="null">---------</option>
+                  <td data-label="Значение">
+                    <select
+                      v-model="feat.value_id"
+                      :disabled="!feat.feature_id"
+                    >
+                      <option :value="null">
+                        {{
+                          feat.feature_id
+                            ? "---------"
+                            : "Сначала выберите характеристику"
+                        }}
+                      </option>
                       <option
-                        v-for="fv in categoryFeatureValues"
+                        v-for="fv in getValuesForFeature(feat.feature_id)"
                         :key="fv.id"
                         :value="fv.id"
                       >
@@ -364,7 +357,7 @@
                       </option>
                     </select>
                   </td>
-                  <td>
+                  <td data-label="">
                     <button
                       type="button"
                       @click="removeFeature(idx)"
@@ -402,10 +395,17 @@
                   <th style="width: 80px">Удалить?</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr v-for="(tg, idx) in form.tag_groups" :key="idx">
-                  <td>
-                    <select v-model="tg.group_name_id">
+              <tbody class="tag-groups-tbody">
+                <tr
+                  class="tag-group-row"
+                  v-for="(tg, idx) in form.tag_groups"
+                  :key="idx"
+                >
+                  <td data-label="Название тега">
+                    <select
+                      v-model="tg.group_name_id"
+                      @change="onTagGroupChange(idx)"
+                    >
                       <option :value="null">---------</option>
                       <option
                         v-for="tn in categoryTagNames"
@@ -416,10 +416,18 @@
                       </option>
                     </select>
                   </td>
-                  <td>
-                    <select v-model="tg.tag_ids" multiple class="multi-select">
+                  <td data-label="Теги">
+                    <select
+                      v-model="tg.tag_ids"
+                      multiple
+                      class="multi-select"
+                      :disabled="!tg.group_name_id"
+                    >
+                      <option v-if="!tg.group_name_id" disabled>
+                        Сначала выберите группу
+                      </option>
                       <option
-                        v-for="tag in categoryTags"
+                        v-for="tag in getTagsForGroup(tg.group_name_id)"
                         :key="tag.id"
                         :value="tag.id"
                       >
@@ -427,7 +435,7 @@
                       </option>
                     </select>
                   </td>
-                  <td>
+                  <td data-label="">
                     <button
                       type="button"
                       @click="removeTagGroup(idx)"
@@ -515,6 +523,7 @@ interface ProductImage {
   is_main: boolean;
   order: number;
   file?: File;
+  preview?: string;
   _new?: boolean;
 }
 
@@ -739,7 +748,7 @@ function debouncedSearch() {
   searchTimeout = setTimeout(() => {
     currentPage.value = 1;
     loadProducts();
-  }, 300);
+  }, 400);
 }
 
 function applyFilters() {
@@ -873,7 +882,8 @@ async function onCategoryChange() {
 function addImage() {
   form.images.push({
     image: null,
-    is_main: form.images.length === 0, // First image is main by default
+    preview: null,
+    is_main: form.images.length === 0,
     order: form.images.length,
     _new: true,
   });
@@ -889,13 +899,18 @@ function setMainImage(idx: number) {
   });
 }
 
-function handleImageUpload(event: Event, idx: number) {
+function onFileChange(event: Event, idx: number) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   if (file) {
-    form.images[idx].file = file;
-    form.images[idx].image = URL.createObjectURL(file);
-    form.images[idx]._new = true;
+    // Читаем файл как DataURL для превью
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      form.images[idx].preview = e.target?.result as string;
+      form.images[idx].file = file;
+      form.images[idx]._new = true;
+    };
+    reader.readAsDataURL(file);
   }
 }
 
@@ -912,6 +927,19 @@ function removeFeature(idx: number) {
   form.features.splice(idx, 1);
 }
 
+// Фильтрация значений по выбранной характеристике
+function getValuesForFeature(featureId: number | null) {
+  if (!featureId) return [];
+  return categoryFeatureValues.value.filter(
+    (fv: any) => fv.feature_id === featureId
+  );
+}
+
+// Обработка изменения характеристики - сбрасываем значение
+function onFeatureChange(idx: number) {
+  form.features[idx].value_id = null;
+}
+
 // ==================== TAG GROUPS ====================
 
 function addTagGroup() {
@@ -923,6 +951,25 @@ function addTagGroup() {
 
 function removeTagGroup(idx: number) {
   form.tag_groups.splice(idx, 1);
+}
+
+// Получение тегов по выбранной группе (tag_name)
+function getTagsForGroup(groupNameId: number | null) {
+  if (!groupNameId) return [];
+  // Находим группу и возвращаем привязанные к ней теги
+  const tagName = categoryTagNames.value.find(
+    (tn: any) => tn.id === groupNameId
+  );
+  if (tagName && tagName.tags) {
+    return tagName.tags;
+  }
+  // Fallback - фильтруем теги по tag_name
+  return categoryTags.value.filter((t: any) => t.tag_name === groupNameId);
+}
+
+// Обработка изменения группы тегов - сбрасываем выбранные теги
+function onTagGroupChange(idx: number) {
+  form.tag_groups[idx].tag_ids = [];
 }
 
 // ==================== SAVE PRODUCT ====================
@@ -1033,4 +1080,96 @@ onMounted(async () => {
 });
 </script>
 
-<!-- Styles in main.css -->
+<style scoped>
+.images-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.image-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--gray-50);
+  width: 150px;
+}
+
+.image-preview-box {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+}
+
+.image-preview-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-preview {
+  font-size: 32px;
+  color: var(--gray-300);
+}
+
+.image-item input[type="file"] {
+  font-size: 11px;
+  width: 100%;
+}
+
+.image-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.image-controls label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.btn-remove-sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: var(--error);
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.add-image-btn {
+  width: 150px;
+  height: 150px;
+  border: 2px dashed var(--gray-300);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.add-image-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: var(--primary-color-light, rgba(59, 130, 246, 0.05));
+}
+</style>

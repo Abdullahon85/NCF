@@ -1,7 +1,7 @@
 //App.vue
 <template>
   <div id="app">
-    <HeaderComponent />
+    <HeaderComponent v-if="!isAdminRoute" />
     <main class="main-content">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -9,7 +9,7 @@
         </transition>
       </router-view>
     </main>
-    <FooterComponent />
+    <FooterComponent v-if="!isAdminRoute" />
 
     <!-- Scroll to Top Button -->
     <transition name="fade-up">
@@ -37,11 +37,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
-import HeaderComponent from "@/components/HeaderComponent.vue";
-import FooterComponent from "@/components/FooterComponent.vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  onBeforeUnmount,
+  defineAsyncComponent,
+} from "vue";
+import { useRoute } from "vue-router";
 
+// Lazy load Header and Footer
+const HeaderComponent = defineAsyncComponent(
+  () => import("@/components/HeaderComponent.vue")
+);
+const FooterComponent = defineAsyncComponent(
+  () => import("@/components/FooterComponent.vue")
+);
+
+const route = useRoute();
 const showScrollTop = ref(false);
+
+const isAdminRoute = computed(() => {
+  return route.path.startsWith("/admin");
+});
 
 const handleScroll = () => {
   showScrollTop.value = window.scrollY > 300;

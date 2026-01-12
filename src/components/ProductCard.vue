@@ -13,7 +13,9 @@
         :src="imageUrl"
         :alt="props.product.name"
         class="product-image"
-        loading="lazy"
+        :loading="priority ? 'eager' : 'lazy'"
+        :fetchpriority="priority ? 'high' : 'auto'"
+        decoding="async"
         @error="handleImageError"
       />
       <div v-else class="product-image-placeholder">
@@ -78,6 +80,7 @@ import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import type { PropType } from "vue";
 import type { Product } from "@/types";
+import { getImageUrl } from "@/api";
 
 const props = defineProps({
   product: {
@@ -89,10 +92,6 @@ const props = defineProps({
 const router = useRouter();
 const imageError = ref(false);
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL?.replace("/api", "") ??
-  "https://ncb-1.onrender.com";
-
 const imageUrl = computed(() => {
   if (imageError.value) return null;
 
@@ -100,15 +99,7 @@ const imageUrl = computed(() => {
   if (!mainImage) return null;
 
   const imgPath = typeof mainImage === "object" ? mainImage.image : mainImage;
-  if (!imgPath) return null;
-
-  // If already absolute URL, return as is
-  if (imgPath.startsWith("http://") || imgPath.startsWith("https://")) {
-    return imgPath;
-  }
-
-  // Convert relative URL to absolute
-  return `${API_BASE_URL}${imgPath.startsWith("/") ? imgPath : "/" + imgPath}`;
+  return getImageUrl(imgPath);
 });
 
 const handleImageError = () => {

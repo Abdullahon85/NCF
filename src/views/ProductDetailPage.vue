@@ -132,20 +132,35 @@
                       copySku(product.manufacturer_sku || product.internal_sku)
                     "
                     class="copy-btn"
+                    :class="{ copied: isCopied }"
                     title="Копировать артикул"
                   >
                     <svg
+                      v-if="!isCopied"
                       width="16"
                       height="16"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2"
+                      class="copy-icon"
                     >
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                       <path
                         d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
                       />
+                    </svg>
+                    <svg
+                      v-else
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      class="check-icon"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
                     </svg>
                   </button>
                 </div>
@@ -226,15 +241,9 @@
                 class="feature-item"
               >
                 <span class="feature-name">{{ feature.feature_name }}</span>
-                <router-link
-                  :to="{
-                    path: '/feature-products',
-                    query: { value: feature.value_name },
-                  }"
-                  class="feature-value"
-                >
+                <p class="feature-value">
                   {{ feature.value_name }}
-                </router-link>
+                </p>
               </div>
             </div>
           </div>
@@ -331,13 +340,16 @@ const contactInfo = ref<ContactInfo | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const showContactModal = ref(false);
+const isCopied = ref(false);
 
 const copySku = async (sku: string | number | undefined) => {
   if (!sku) return;
   try {
     await navigator.clipboard.writeText(String(sku));
-    // Visual feedback could be added here
-    console.log("Copied SKU:", sku);
+    isCopied.value = true;
+    setTimeout(() => {
+      isCopied.value = false;
+    }, 2000);
   } catch (err) {
     console.error("Copy failed", err);
   }

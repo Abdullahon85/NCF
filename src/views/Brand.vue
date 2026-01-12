@@ -164,7 +164,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
-import { brandsAPI } from "@/api";
+import { brandsAPI, getImageUrl } from "@/api";
 import type { Brand, Product } from "@/types";
 import ProductGrid from "@/components/ProductGrid.vue";
 import Pagination from "@/components/Pagination.vue";
@@ -193,16 +193,6 @@ const pagination = reactive({
   totalPages: 1,
   total: 0,
 });
-
-const getImageUrl = (path: string): string => {
-  if (!path) return "";
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  let baseUrl = (import.meta.env.VITE_API_URL ||
-    "https://ncb-1.onrender.com") as string;
-  // if env uses /api as base, strip it so media paths concatenate correctly
-  baseUrl = baseUrl.replace(/\/api\/?$/, "");
-  return `${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
-};
 
 // const formatPrice = (price: number): string => {
 //   return new Intl.NumberFormat("ru-RU").format(price);

@@ -1,7 +1,46 @@
 <template>
   <div class="page-layout container">
-    <aside class="filters-column">
+    <!-- Mobile Filter Button -->
+    <button class="mobile-filter-btn" @click="showFilters = true">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <line x1="4" y1="6" x2="20" y2="6" />
+        <line x1="4" y1="12" x2="20" y2="12" />
+        <line x1="4" y1="18" x2="20" y2="18" />
+      </svg>
+      Фильтры
+    </button>
+
+    <!-- Overlay -->
+    <transition name="fade">
+      <div
+        v-if="showFilters"
+        class="filters-overlay"
+        @click="showFilters = false"
+      ></div>
+    </transition>
+
+    <aside class="filters-column" :class="{ 'show-mobile': showFilters }">
       <div class="panel">
+        <button class="mobile-filter-close" @click="showFilters = false">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
         <h3>Фильтры</h3>
 
         <!-- Фильтр цены -->
@@ -9,7 +48,10 @@
           v-if="priceRange.min !== null && priceRange.max !== null"
           :min="priceRange.min"
           :max="priceRange.max"
-          :model-value="{ min: filters.priceMin, max: filters.priceMax }"
+          :model-value="{
+            min: filters.priceMin ?? priceRange.min,
+            max: filters.priceMax ?? priceRange.max,
+          }"
           @update:model-value="onPriceFilterChange"
         />
 
@@ -52,6 +94,9 @@
         <!-- Действия с фильтрами -->
         <div class="filter-actions">
           <button @click="resetFilters" class="btn muted">Сбросить</button>
+          <button @click="showFilters = false" class="btn primary">
+            Применить
+          </button>
         </div>
       </div>
     </aside>
@@ -154,6 +199,7 @@ const brandsOptions = ref<Brand[]>([]);
 const tagGroups = ref<ProductTagGroup[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
+const showFilters = ref(false);
 
 const priceRange = reactive({
   min: null as number | null,
@@ -478,6 +524,7 @@ const resetFilters = () => {
   filters.search = "";
   searchInput.value = "";
   pagination.page = 1;
+  showFilters.value = false;
   loadProducts();
 };
 

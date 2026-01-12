@@ -115,6 +115,7 @@ const menuItems = computed(() => [
   { path: "/admin/brands", label: "Бренды", icon: "🏷️" },
   { path: "/admin/tags", label: "Теги", icon: "#️⃣" },
   { path: "/admin/features", label: "Характеристики", icon: "📋" },
+  { path: "/admin/banners", label: "Баннеры", icon: "🖼️" },
   { path: "/admin/news", label: "Новости", icon: "📰" },
   {
     path: "/admin/messages",
@@ -132,6 +133,7 @@ const pageTitles: Record<string, string> = {
   "/admin/brands": "Управление брендами",
   "/admin/tags": "Управление тегами",
   "/admin/features": "Управление характеристиками",
+  "/admin/banners": "Управление баннерами",
   "/admin/news": "Управление новостями",
   "/admin/messages": "Сообщения",
   "/admin/settings": "Настройки сайта",

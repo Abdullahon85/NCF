@@ -2,9 +2,48 @@
 <template>
   <div class="all-brands-page">
     <div class="container">
+      <!-- Mobile Filter Button -->
+      <button class="mobile-filter-btn" @click="showFilters = true">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="4" y1="6" x2="20" y2="6" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="18" x2="20" y2="18" />
+        </svg>
+        Фильтры
+      </button>
+
+      <!-- Overlay -->
+      <transition name="fade">
+        <div
+          v-if="showFilters"
+          class="filters-overlay"
+          @click="showFilters = false"
+        ></div>
+      </transition>
+
       <div class="page-layout">
-        <aside class="filters-column">
+        <aside class="filters-column" :class="{ 'show-mobile': showFilters }">
           <div class="filters-sticky">
+            <button class="mobile-filter-close" @click="showFilters = false">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
             <div class="filters-header">
               <h3>
                 <svg
@@ -188,6 +227,14 @@
                 </span>
               </div>
             </div>
+
+            <!-- Filter Actions -->
+            <div class="filter-actions">
+              <button @click="resetFilters" class="btn muted">Сбросить</button>
+              <button @click="showFilters = false" class="btn primary">
+                Применить
+              </button>
+            </div>
           </div>
         </aside>
 
@@ -333,6 +380,7 @@ const brands = ref<Brand[]>([]);
 const categories = ref<Category[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
+const showFilters = ref(false);
 
 const filters = reactive({
   search: "",

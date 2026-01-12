@@ -2,10 +2,49 @@
 <template>
   <div class="all-brands" v-if="$route.name == 'All-Brand'">
     <div class="container">
+      <!-- Mobile Filter Button -->
+      <button class="mobile-filter-btn" @click="showFilters = true">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="4" y1="6" x2="20" y2="6" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="18" x2="20" y2="18" />
+        </svg>
+        Фильтры
+      </button>
+
+      <!-- Overlay -->
+      <transition name="fade">
+        <div
+          v-if="showFilters"
+          class="filters-overlay"
+          @click="showFilters = false"
+        ></div>
+      </transition>
+
       <div class="page-layout">
         <!-- Фильтры -->
-        <aside class="filters-column">
+        <aside class="filters-column" :class="{ 'show-mobile': showFilters }">
           <div class="panel">
+            <button class="mobile-filter-close" @click="showFilters = false">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
             <h3>Фильтры</h3>
 
             <!-- Поиск по брендам -->
@@ -98,6 +137,9 @@
             <!-- Действия с фильтрами -->
             <div class="filter-actions">
               <button @click="resetFilters" class="btn muted">Сбросить</button>
+              <button @click="showFilters = false" class="btn primary">
+                Применить
+              </button>
             </div>
           </div>
         </aside>
@@ -211,7 +253,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, reactive } from "vue";
-import { brandsAPI, categoriesAPI } from "@/api";
+import { brandsAPI, categoriesAPI, getImageUrl } from "@/api";
 import type { Brand, Category, BrandFilters } from "@/types";
 import Pagination from "@/components/Pagination.vue";
 
@@ -219,6 +261,7 @@ const brands = ref<Brand[]>([]);
 const categories = ref<Category[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
+const showFilters = ref(false);
 
 const pagination = reactive({
   page: 1,
@@ -236,16 +279,6 @@ const filters = reactive({
   priceMax: null as number | null,
   ordering: "name",
 });
-
-const getImageUrl = (path: string | null) => {
-  if (!path) return "";
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  let base = (import.meta.env.VITE_API_URL ||
-    "https://nargizacompanyb.onrender.com") as string;
-  // strip trailing '/api' if present to correctly point to media files https://nargizacompanyb.onrender.com/api
-  base = base.replace(/\/api\/?$/, "");
-  return `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
-};
 
 const loadBrands = async () => {
   loading.value = true;
@@ -299,6 +332,11 @@ const resetFilters = () => {
   filters.priceMin = null;
   filters.priceMax = null;
   filters.ordering = "name";
+  applyFilters();
+};
+  filters.ordering = "name";
+  applyFilters();
+  showFilters.value = falseng = "name";
   applyFilters();
 };
 

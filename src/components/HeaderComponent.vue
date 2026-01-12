@@ -56,11 +56,7 @@
               >Контакты</router-link
             >
           </li>
-          <li>
-            <router-link to="/admin" @click="mobileMenuOpen = false"
-              >Админка</router-link
-            >
-          </li>
+          
         </ul>
       </nav>
     </div>

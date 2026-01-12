@@ -39,10 +39,10 @@
         </thead>
         <tbody>
           <tr v-for="item in items" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td class="name-cell">{{ item.title }}</td>
-            <td>{{ formatDate(item.pub_date) }}</td>
-            <td>
+            <td data-label="ID">{{ item.id }}</td>
+            <td data-label="Заголовок" class="name-cell">{{ item.title }}</td>
+            <td data-label="Дата">{{ formatDate(item.pub_date) }}</td>
+            <td data-label="Статус">
               <span
                 :class="[
                   'badge',
@@ -52,7 +52,7 @@
                 {{ item.is_published ? "Опубликовано" : "Черновик" }}
               </span>
             </td>
-            <td>
+            <td data-label="Действия">
               <div class="actions">
                 <button @click="editItem(item)" class="btn-icon">✏️</button>
                 <button @click="confirmDelete(item)" class="btn-icon delete">

@@ -1,24 +1,28 @@
 //router/index.ts
 import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
-import HomePage from "../views/HomePage.vue";
-import CatalogPage from "../views/CatalogPage.vue";
-import CategoryProductsPage from "../views/CategoryProductsPage.vue";
-import ProductDetailPage from "../views/ProductDetailPage.vue";
-import NewsPage from "../views/NewsPage.vue";
-import NewsDetailPage from "../views/NewsDetailPage.vue";
-import AboutPage from "../views/AboutPage.vue";
-import ContactPage from "../views/ContactPage.vue";
-import NotFound from "../views/NotFound.vue";
-import Brand from "../views/Brand.vue";
-import AllBrandsPage from "../views/AllBrandsPage.vue";
 
-// Admin imports
-import AdminLayout from "../components/admin/AdminLayout.vue";
-import AdminLogin from "../views/AdminLogin.vue";
-import AdminDashboard from "../views/AdminDashboard.vue";
-import AdminProfile from "../views/AdminProfile.vue";
-import ProductsManagement from "../views/ProductsManagement.vue";
+// Only HomePage is loaded eagerly for fast initial load
+import HomePage from "../views/HomePage.vue";
+
+// Lazy load all other pages
+const CatalogPage = () => import("../views/CatalogPage.vue");
+const CategoryProductsPage = () => import("../views/CategoryProductsPage.vue");
+const ProductDetailPage = () => import("../views/ProductDetailPage.vue");
+const NewsPage = () => import("../views/NewsPage.vue");
+const NewsDetailPage = () => import("../views/NewsDetailPage.vue");
+const AboutPage = () => import("../views/AboutPage.vue");
+const ContactPage = () => import("../views/ContactPage.vue");
+const NotFound = () => import("../views/NotFound.vue");
+const Brand = () => import("../views/Brand.vue");
+const AllBrandsPage = () => import("../views/AllBrandsPage.vue");
+
+// Admin imports (lazy loaded)
+const AdminLayout = () => import("../components/admin/AdminLayout.vue");
+const AdminLogin = () => import("../views/AdminLogin.vue");
+const AdminDashboard = () => import("../views/AdminDashboard.vue");
+const AdminProfile = () => import("../views/AdminProfile.vue");
+const ProductsManagement = () => import("../views/ProductsManagement.vue");
 
 // Auth store for route guards
 import { useAuthStore } from "../stores/auth";
@@ -122,6 +126,11 @@ const routes: RouteRecordRaw[] = [
         path: "news",
         name: "NewsManagement",
         component: () => import("../views/NewsManagement.vue"),
+      },
+      {
+        path: "banners",
+        name: "BannersManagement",
+        component: () => import("../views/BannersManagement.vue"),
       },
       {
         path: "messages",

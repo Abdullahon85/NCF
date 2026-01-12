@@ -141,6 +141,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, onUnmounted } from "vue";
 import type { Image } from "@/types";
+import { getImageUrl } from "@/api";
 
 interface Props {
   images?: Image[];
@@ -150,18 +151,6 @@ interface Props {
 const props = defineProps<Props>();
 const selectedImageUrl = ref<string>("");
 const fullscreenMode = ref(false);
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL?.replace("/api", "") ??
-  "https://ncb-1.onrender.com";
-
-const getImageUrl = (imgPath: string | undefined): string => {
-  if (!imgPath) return "";
-  if (imgPath.startsWith("http://") || imgPath.startsWith("https://")) {
-    return imgPath;
-  }
-  return `${API_BASE_URL}${imgPath.startsWith("/") ? imgPath : "/" + imgPath}`;
-};
 
 const sortedImages = computed(() => {
   if (!props.images) return [];

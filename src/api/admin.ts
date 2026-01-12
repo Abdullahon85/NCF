@@ -7,8 +7,8 @@ import type {
 } from "axios";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? "https://ncb-1.onrender.com/api";
-
+  import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
+//   "http://localhost:8000/api" "https://ncb-1.onrender.com/api" "https://ncb-r1l6.onrender.com/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
 // ============ SECURITY CONSTANTS ============
 const TOKEN_KEY = "admin_token";
 const REFRESH_KEY = "admin_refresh";
@@ -133,7 +133,8 @@ adminApi.interceptors.request.use(
 // ============ RESPONSE INTERCEPTOR ============
 adminApi.interceptors.response.use(
   (response: AxiosResponse) => {
-    if (!response.data) {
+    // Allow empty responses for DELETE requests (204 No Content)
+    if (!response.data && response.status !== 204) {
       console.error("Invalid response: no data");
       return Promise.reject(new Error("Invalid server response"));
     }
@@ -296,6 +297,15 @@ export const categoryDataAPI = {
       params: { category: categoryId },
     });
   },
+
+  getValuesByFeature: (featureId: number) => {
+    if (!featureId || featureId < 1) {
+      return Promise.reject(new Error("Invalid feature ID"));
+    }
+    return adminApi.get("/feature-values-by-feature/", {
+      params: { feature_id: featureId },
+    });
+  },
 };
 
 // ============ CATEGORIES API ============
@@ -370,8 +380,11 @@ export const brandsAdminAPI = {
 
 // ============ TAGS API ============
 export const tagsAdminAPI = {
-  getAll: (params?: { search?: string; category?: number }) =>
-    adminApi.get("/admin/tags/", { params }),
+  getAll: (params?: {
+    search?: string;
+    category?: number;
+    tag_name?: number;
+  }) => adminApi.get("/admin/tags/", { params }),
 
   getById: (id: number) => {
     validateId(id, "tag");
@@ -389,6 +402,9 @@ export const tagsAdminAPI = {
     validateId(id, "tag");
     return adminApi.delete(`/admin/tags/${id}/`);
   },
+
+  getByTagName: (tagNameId: number) =>
+    adminApi.get(`/admin/tags-by-tag-name/${tagNameId}/`),
 };
 
 // ============ TAG NAMES API ============
@@ -439,7 +455,7 @@ export const featuresAdminAPI = {
 
 // ============ FEATURE VALUES API ============
 export const featureValuesAdminAPI = {
-  getAll: (params?: { search?: string; category?: number }) =>
+  getAll: (params?: { search?: string; category?: number; feature?: number }) =>
     adminApi.get("/admin/feature-values/", { params }),
 
   getById: (id: number) => {
@@ -457,6 +473,13 @@ export const featureValuesAdminAPI = {
   delete: (id: number) => {
     validateId(id, "feature value");
     return adminApi.delete(`/admin/feature-values/${id}/`);
+  },
+
+  getByFeature: (featureId: number) => {
+    validateId(featureId, "feature");
+    return adminApi.get("/admin/feature-values/", {
+      params: { feature: featureId },
+    });
   },
 };
 
@@ -535,6 +558,35 @@ export const messagesAdminAPI = {
   },
 };
 
+// ============ BANNERS API ============
+export const bannersAdminAPI = {
+  getAll: () => adminApi.get("/admin/banners/"),
+
+  getById: (id: number) => {
+    validateId(id, "banner");
+    return adminApi.get(`/admin/banners/${id}/`);
+  },
+
+  create: (data: any) => adminApi.post("/admin/banners/", data),
+
+  update: (id: number, data: any) => {
+    validateId(id, "banner");
+    return adminApi.patch(`/admin/banners/${id}/`, data);
+  },
+
+  delete: (id: number) => {
+    validateId(id, "banner");
+    return adminApi.delete(`/admin/banners/${id}/`);
+  },
+
+  uploadImage: (id: number, formData: FormData) => {
+    validateId(id, "banner");
+    return adminApi.post(`/admin/banners/${id}/upload-image/`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+};
+
 // ============ PRODUCTS API ============
 export const productsAdminAPI = {
   getAll: (params?: {
@@ -573,6 +625,7 @@ export const productsAdminAPI = {
 
     return adminApi.post(`/admin/products/${id}/upload-image/`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
+      timeout: 120000, // 2 minutes for file upload
     });
   },
 

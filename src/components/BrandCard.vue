@@ -7,6 +7,8 @@
         :src="brand.image"
         :alt="brand.name"
         class="brand-logo"
+        loading="lazy"
+        decoding="async"
       />
       <div v-else class="brand-placeholder">
         {{ brand.name[0] }}

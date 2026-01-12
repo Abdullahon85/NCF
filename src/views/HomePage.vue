@@ -1,35 +1,39 @@
 <template>
   <div class="home-page">
-    <section class="hero">
-      <div class="hero-overlay"></div>
-      <div class="container">
-        <router-link to="/catalog" class="cta-button"
-          ><img :src="p" alt=""
-        /></router-link>
+    <!-- Banner Slider -->
+    <section class="hero-banner">
+      <div class="banner-container">
+        <BannerSlider
+          :banners="banners"
+          :loading="bannersLoading"
+          :autoplay-interval="5000"
+        />
       </div>
     </section>
 
-    <section class="featured-categories" v-if="categories.length">
+    <section class="featured-categories">
       <div class="categories-container">
         <h2 class="categories-title">Каталог товаров</h2>
 
-        <div class="categories-grid">
+        <!-- Skeleton при загрузке -->
+        <div v-if="loading" class="categories-grid">
+          <div v-for="n in 6" :key="n" class="category-skeleton skeleton">
+            <div class="skeleton-image"></div>
+            <div class="skeleton-text"></div>
+          </div>
+        </div>
+
+        <div v-else-if="categories.length" class="categories-grid">
           <CategoryCardComponent
             v-for="category in categories"
             :key="category.id"
             :category="category"
           />
         </div>
-
-        <!-- <div class="categories-footer">
-          <router-link to="/catalog" class="categories-link">
-            Все категории →
-          </router-link>
-        </div> -->
       </div>
     </section>
 
-    <section class="featured-brands" v-if="brands.length">
+    <section class="featured-brands" v-if="!loading && brands.length">
       <div class="brands-container">
         <h2 class="brands-title">Наши партнёрские бренды</h2>
 
@@ -78,30 +82,128 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { categoriesAPI, newsAPI, brandsAPI } from "@/api";
+import { categoriesAPI, brandsAPI, bannersAPI } from "@/api";
 import CategoryCardComponent from "@/components/CategoryCardComponent.vue";
-// import NewsCardComponent from '@/components/NewsCardComponent.vue';
 import BrandsSlider from "@/components/BrandsSlider.vue";
-import type { Category, NewsItem, Brand } from "@/types";
-import p from "/public/обои.png";
+import BannerSlider from "@/components/BannerSlider.vue";
+import type { Category, Brand, Banner } from "@/types";
+
 const categories = ref<Category[]>([]);
-const news = ref<NewsItem[]>([]);
 const brands = ref<Brand[]>([]);
+const banners = ref<Banner[]>([]);
+const loading = ref(true);
+const bannersLoading = ref(true);
+
+// Простой кэш в sessionStorage
+const cache = {
+  get(key: string) {
+    try {
+      const item = sessionStorage.getItem(key);
+      if (!item) return null;
+      const { data, expiry } = JSON.parse(item);
+      if (Date.now() > expiry) {
+        sessionStorage.removeItem(key);
+        return null;
+      }
+      return data;
+    } catch {
+      return null;
+    }
+  },
+  set(key: string, data: any, ttl = 300) {
+    try {
+      sessionStorage.setItem(
+        key,
+        JSON.stringify({ data, expiry: Date.now() + ttl })
+      );
+    } catch {}
+  },
+};
 
 onMounted(async () => {
+  // Загружаем баннеры отдельно для быстрого отображения
+  bannersAPI
+    .getAll()
+    .then((res) => {
+      banners.value = res.data;
+      bannersLoading.value = false;
+    })
+    .catch(() => {
+      bannersLoading.value = false;
+    });
+
+  // Проверяем кэш
+  const cachedCategories = cache.get("home_categories");
+  const cachedBrands = cache.get("home_brands");
+
+  if (cachedCategories && cachedBrands) {
+    categories.value = cachedCategories;
+    brands.value = cachedBrands;
+    loading.value = false;
+    return;
+  }
+
   try {
-    const [categoriesResponse, newsResponse, brandsResponse] =
-      await Promise.all([
-        categoriesAPI.getAll(),
-        newsAPI.getAll(3),
-        brandsAPI.getAll(),
-      ]);
+    const [categoriesResponse, brandsResponse] = await Promise.all([
+      categoriesAPI.getAll(),
+      brandsAPI.getAll(),
+    ]);
 
     categories.value = categoriesResponse.data.results;
-    news.value = newsResponse.data.results;
     brands.value = brandsResponse.data.results;
+
+    // Сохраняем в кэш на 5 минут
+    cache.set("home_categories", categories.value);
+    cache.set("home_brands", brands.value);
   } catch (error) {
     console.error("Failed to load home page data:", error);
+  } finally {
+    loading.value = false;
   }
 });
 </script>
+
+<style scoped>
+.hero-banner {
+  padding: 0;
+  margin-bottom: 32px;
+}
+
+.banner-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (max-width: 768px) {
+  .hero-banner {
+    margin-bottom: 24px;
+  }
+
+  .banner-container {
+    padding: 0 12px;
+  }
+}
+
+.category-skeleton {
+  background: var(--gray-100);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 200px;
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 120px;
+  background: var(--gray-200);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.skeleton-text {
+  height: 20px;
+  background: var(--gray-200);
+  border-radius: 4px;
+  width: 70%;
+}
+</style>

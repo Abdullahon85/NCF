@@ -3,7 +3,13 @@
   <div class="category-card">
     <router-link :to="`/catalog/${category.slug}`" class="card-link">
       <div class="card-image">
-        <img v-if="category.image" :src="category.image" :alt="category.name" />
+        <img
+          v-if="category.image"
+          :src="category.image"
+          :alt="category.name"
+          loading="lazy"
+          decoding="async"
+        />
         <div v-else class="placeholder-image">
           <span>{{ category.name[0] }}</span>
         </div>

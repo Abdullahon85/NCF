@@ -2,9 +2,10 @@
 <template>
   <div class="products-grid">
     <ProductCard
-      v-for="product in products"
+      v-for="(product, index) in products"
       :key="product.slug || product.id"
       :product="product"
+      :priority="index < 4"
     />
   </div>
 </template>

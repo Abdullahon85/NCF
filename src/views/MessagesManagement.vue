@@ -44,19 +44,23 @@
             :key="item.id"
             :class="{ unread: !item.is_processed }"
           >
-            <td>{{ item.id }}</td>
-            <td class="name-cell">{{ item.name }}</td>
-            <td>
+            <td data-label="ID">{{ item.id }}</td>
+            <td data-label="Имя" class="name-cell">{{ item.name }}</td>
+            <td data-label="Email">
               <a :href="'mailto:' + item.email">{{ item.email }}</a>
             </td>
-            <td>
+            <td data-label="Телефон">
               <a :href="'tel:' + item.phone">{{ item.phone }}</a>
             </td>
-            <td class="message-cell" @click="viewMessage(item)">
+            <td
+              data-label="Сообщение"
+              class="message-cell"
+              @click="viewMessage(item)"
+            >
               {{ truncate(item.message, 50) }}
             </td>
-            <td>{{ formatDate(item.created_at) }}</td>
-            <td>
+            <td data-label="Дата">{{ formatDate(item.created_at) }}</td>
+            <td data-label="Статус">
               <span
                 :class="[
                   'badge',
@@ -66,7 +70,7 @@
                 {{ item.is_processed ? "Обработано" : "Новое" }}
               </span>
             </td>
-            <td>
+            <td data-label="Действия">
               <div class="actions">
                 <button
                   @click="viewMessage(item)"
