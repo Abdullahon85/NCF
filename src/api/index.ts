@@ -19,7 +19,7 @@ import type {
 } from "@/types";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? "https://ncb-1.onrender.com/api";
+  import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000/api";
 //   "http://127.0.0.1:8000/api" "https://ncb-1.onrender.com/api" "https://ncb-r1l6.onrender.com/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -49,7 +49,7 @@ api.interceptors.response.use(
         const retryDelay = RETRY_DELAY * config._retryCount;
 
         console.warn(
-          `Rate limit hit. Retrying in ${retryDelay}ms... (Attempt ${config._retryCount}/${MAX_RETRIES})`
+          `Rate limit hit. Retrying in ${retryDelay}ms... (Attempt ${config._retryCount}/${MAX_RETRIES})`,
         );
 
         await delay(retryDelay);
@@ -61,7 +61,7 @@ api.interceptors.response.use(
 
     console.error("API Error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 // api.interceptors.request.use(async (cfg) => {
 //   const token = localStorage.getItem('token');
@@ -82,7 +82,7 @@ export const categoriesAPI = {
   getProducts: (slug: string, params?: Record<string, any>) => {
     return api.get<PaginatedResponse<Product>>(
       `/categories/${slug}/products/`,
-      { params }
+      { params },
     );
   },
 
@@ -125,11 +125,11 @@ export const productsAPI = {
 
   getByBrand: (
     brandSlug: string,
-    params?: { page?: number; page_size?: number }
+    params?: { page?: number; page_size?: number },
   ) => {
     return api.get<PaginatedResponse<Product>>(
       `/brands/${brandSlug}/products/`,
-      { params }
+      { params },
     );
   },
   getPriceRange(categorySlug: string) {

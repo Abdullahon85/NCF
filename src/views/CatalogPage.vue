@@ -2,28 +2,86 @@
 <template>
   <div class="catalog-page">
     <div class="container">
-      <h1>Каталог товаров</h1>
-
       <!-- Если идёт поиск, показываем результаты поиска -->
-      <div v-if="searchQuery" class="search-results">
-        <h2>Результаты поиска: "{{ searchQuery }}"</h2>
-        <p v-if="searchResults.length === 0" class="no-results">
-          Товары не найдены
-        </p>
+      <div v-if="searchQuery" class="search-results-section">
+        <div class="search-header">
+          <h1>Результаты поиска</h1>
+          <div class="search-query-display">
+            <span class="search-label">Запрос:</span>
+            <span class="search-value">"{{ searchQuery }}"</span>
+            <router-link to="/catalog" class="clear-search">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              Очистить
+            </router-link>
+          </div>
+        </div>
 
-        <div v-else class="products-grid">
-          <ProductCard
-            v-for="product in searchResults"
-            :key="product.id"
-            :product="product"
-          />
+        <div v-if="loading" class="loading-container">
+          <div class="loading-spinner"></div>
+          <p>Поиск товаров...</p>
+        </div>
+
+        <div
+          v-else-if="searchResults.length === 0"
+          class="no-results-container"
+        >
+          <div class="no-results-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="11" y1="16" x2="11.01" y2="16"></line>
+            </svg>
+          </div>
+          <h2>Ничего не найдено</h2>
+          <p>
+            По запросу <strong>"{{ searchQuery }}"</strong> товары не найдены
+          </p>
+          <router-link to="/catalog" class="back-to-catalog">
+            Вернуться в каталог
+          </router-link>
+        </div>
+
+        <div v-else>
+          <div class="search-results-info">
+            Найдено товаров: <strong>{{ searchResults.length }}</strong>
+          </div>
+          <div class="products-grid">
+            <ProductCard
+              v-for="product in searchResults"
+              :key="product.id"
+              :product="product"
+            />
+          </div>
         </div>
       </div>
 
       <!-- Обычное отображение категорий -->
       <div v-else>
+        <h1>Каталог товаров</h1>
+
         <div v-if="loading" class="loading-container">
           <div class="loading-spinner"></div>
+          <p>Загрузка каталога...</p>
         </div>
 
         <div v-else-if="error" class="error-message">
@@ -163,7 +221,7 @@ watch(
     }
     // Скролл вверх при новом поиске
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  },
 );
 </script>
 

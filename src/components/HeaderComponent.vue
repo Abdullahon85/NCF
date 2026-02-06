@@ -6,6 +6,42 @@
           <span>Future Stars</span>
         </router-link>
 
+        <!-- Search Bar -->
+        <div class="search-container">
+          <form
+            @submit.prevent="navigateToSearchResults"
+            class="search-wrapper"
+          >
+            <input
+              type="text"
+              v-model="searchQuery"
+              @keyup.enter="navigateToSearchResults"
+              placeholder="Поиск по названию или артикулу..."
+              class="search-input"
+            />
+            <button
+              type="submit"
+              class="search-btn"
+              :disabled="searchQuery.trim().length < 1"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </button>
+          </form>
+        </div>
+
         <button
           class="mobile-menu-toggle"
           @click="mobileMenuOpen = !mobileMenuOpen"
@@ -56,7 +92,6 @@
               >Контакты</router-link
             >
           </li>
-          
         </ul>
       </nav>
     </div>
@@ -65,14 +100,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { categoriesAPI } from "@/api";
 import type { Category } from "@/types";
 
 const route = useRoute();
+const router = useRouter();
 const mobileMenuOpen = ref(false);
 const open = ref(false);
 const categories = ref<Category[]>([]);
+
+// Search functionality
+const searchQuery = ref("");
 
 const handleCatalogClick = () => {
   if (window.innerWidth <= 768) {
@@ -82,13 +121,25 @@ const handleCatalogClick = () => {
   }
 };
 
+const navigateToSearchResults = () => {
+  const query = searchQuery.value.trim();
+  if (query.length >= 2) {
+    router.push({
+      path: "/catalog",
+      query: { search: query },
+    });
+    searchQuery.value = "";
+  }
+};
+
 // Закрытие меню при смене маршрута
 watch(
   () => route.path,
   () => {
     mobileMenuOpen.value = false;
     open.value = false;
-  }
+    searchQuery.value = "";
+  },
 );
 
 // Блокировка скролла при открытом меню

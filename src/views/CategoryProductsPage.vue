@@ -1,5 +1,14 @@
 <template>
   <div class="page-layout container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+      <router-link to="/">Главная</router-link>
+      <span class="separator">›</span>
+      <router-link to="/catalog">Каталог</router-link>
+      <span class="separator">›</span>
+      <span class="current">{{ categoryName }}</span>
+    </nav>
+
     <!-- Mobile Filter Button -->
     <button class="mobile-filter-btn" @click="showFilters = true">
       <svg
@@ -200,6 +209,7 @@ const tagGroups = ref<ProductTagGroup[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const showFilters = ref(false);
+const categoryName = ref<string>("");
 
 const priceRange = reactive({
   min: null as number | null,
@@ -252,6 +262,20 @@ const loadBrands = async (): Promise<void> => {
   } catch (err) {
     console.error("Ошибка загрузки брендов:", err);
     brandsOptions.value = [];
+  }
+};
+
+/**
+ * Загрузка информации о категории
+ */
+const loadCategoryInfo = async (): Promise<void> => {
+  if (!categorySlug.value) return;
+  try {
+    const response = await categoriesAPI.getBySlug(categorySlug.value);
+    categoryName.value = response.data.name || "";
+  } catch (err) {
+    console.error("Ошибка загрузки категории:", err);
+    categoryName.value = "";
   }
 };
 
@@ -550,7 +574,7 @@ const changePage = (page: number) => {
  */
 onMounted(async () => {
   // Сначала загружаем метаданные
-  await Promise.all([loadBrands(), loadTags(), loadPriceRange()]);
+  await Promise.all([loadCategoryInfo(), loadBrands(), loadTags(), loadPriceRange()]);
   // Затем загружаем продукты
   await loadProducts();
 });
@@ -567,6 +591,7 @@ watch(
     products.value = [];
     brandsOptions.value = [];
     tagGroups.value = [];
+    categoryName.value = "";
     priceRange.min = null;
     priceRange.max = null;
     filters.brands = [];
@@ -580,7 +605,7 @@ watch(
     pagination.page = 1;
 
     // Загружаем данные для новой категории
-    await Promise.all([loadBrands(), loadTags(), loadPriceRange()]);
+    await Promise.all([loadCategoryInfo(), loadBrands(), loadTags(), loadPriceRange()]);
     await loadProducts();
   }
 );
