@@ -433,7 +433,7 @@ watch(
       console.error("Не удалось сохранить фильтры", e);
     }
   },
-  { deep: true }
+  { deep: true },
 );
 
 // Helpers
@@ -484,7 +484,7 @@ const loadBrands = async (allowFallback = true) => {
     pagination.total = Number(data.count ?? 0);
     pagination.totalPages = Math.max(
       1,
-      Math.ceil(pagination.total / pagination.pageSize)
+      Math.ceil(pagination.total / pagination.pageSize),
     );
 
     // Keep position; no auto scroll on filter/pagination
