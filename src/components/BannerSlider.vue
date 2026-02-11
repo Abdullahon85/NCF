@@ -212,7 +212,7 @@ watch(
       startAutoplay();
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 onMounted(() => {

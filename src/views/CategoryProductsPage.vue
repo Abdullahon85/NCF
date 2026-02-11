@@ -30,7 +30,7 @@
     <transition name="fade">
       <div
         v-if="showFilters"
-        class="filters-overlay"
+        class="filters-overlay show"
         @click="showFilters = false"
       ></div>
     </transition>
@@ -244,7 +244,7 @@ let searchDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
 // COMPUTED
 // ============================================
 const categorySlug = computed(
-  () => (route.params.categorySlug as string) || ""
+  () => (route.params.categorySlug as string) || "",
 );
 
 // ============================================
@@ -405,7 +405,7 @@ const loadProducts = async (): Promise<void> => {
     pagination.total = Number(data.count ?? 0);
     pagination.totalPages = Math.max(
       1,
-      Math.ceil(pagination.total / pagination.pageSize)
+      Math.ceil(pagination.total / pagination.pageSize),
     );
 
     // Если текущая страница больше доступных - возвращаемся на первую
@@ -574,7 +574,12 @@ const changePage = (page: number) => {
  */
 onMounted(async () => {
   // Сначала загружаем метаданные
-  await Promise.all([loadCategoryInfo(), loadBrands(), loadTags(), loadPriceRange()]);
+  await Promise.all([
+    loadCategoryInfo(),
+    loadBrands(),
+    loadTags(),
+    loadPriceRange(),
+  ]);
   // Затем загружаем продукты
   await loadProducts();
 });
@@ -605,9 +610,14 @@ watch(
     pagination.page = 1;
 
     // Загружаем данные для новой категории
-    await Promise.all([loadCategoryInfo(), loadBrands(), loadTags(), loadPriceRange()]);
+    await Promise.all([
+      loadCategoryInfo(),
+      loadBrands(),
+      loadTags(),
+      loadPriceRange(),
+    ]);
     await loadProducts();
-  }
+  },
 );
 </script>
 

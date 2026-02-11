@@ -172,7 +172,7 @@
     height: 28px !important;
   }
 
-  /* Мобильные фильтры - оптимизация */
+  /* Мобильные фильтры - дополнительные улучшения */
   .filters-column {
     overscroll-behavior: contain;
   }
@@ -182,38 +182,9 @@
     user-select: none;
   }
 
-  /* Улучшенная анимация появления фильтров - центрированная */
-  @keyframes modalFadeIn {
-    from {
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(0.85);
-    }
-    to {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-    }
-  }
-
-  @keyframes modalFadeOut {
-    from {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(0.85);
-    }
-  }
-
-  .filters-column.show-mobile {
-    animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
   /* Предотвращение скролла body при открытых фильтрах */
   body:has(.filters-column.show-mobile) {
     overflow: hidden;
-    position: fixed;
-    width: 100%;
   }
 }
 

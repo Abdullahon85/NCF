@@ -23,7 +23,7 @@
       <transition name="fade">
         <div
           v-if="showFilters"
-          class="filters-overlay"
+          class="filters-overlay show"
           @click="showFilters = false"
         ></div>
       </transition>
