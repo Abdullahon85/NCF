@@ -70,7 +70,7 @@
     </div>
 
     <!-- Change Password -->
-    <div class="card">
+    <!-- <div class="card">
       <div class="card-header">
         <h2>🔐 Смена пароля</h2>
       </div>
@@ -138,7 +138,7 @@
             </div>
           </div>
 
-          <!-- Password strength indicator -->
+          
           <div v-if="passwordForm.newPassword" class="password-strength">
             <div class="strength-label">Надежность пароля:</div>
             <div class="strength-bar">
@@ -171,7 +171,7 @@
           </div>
         </form>
       </div>
-    </div>
+    </div> -->
 
     <!-- Account Info -->
     <div class="card">

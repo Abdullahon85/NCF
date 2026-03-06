@@ -268,7 +268,7 @@
                 <div class="image-preview-box">
                   <img
                     v-if="img.preview || img.image"
-                    :src="(img.preview || img.image) || undefined"
+                    :src="img.preview || img.image || undefined"
                     alt="Preview"
                   />
                   <span v-else class="no-preview">📷</span>
@@ -311,72 +311,74 @@
               Сначала выберите категорию для отображения характеристик
             </div>
 
-            <table v-else class="inline-table">
-              <thead>
-                <tr>
-                  <th>Характеристика</th>
-                  <th>Значение</th>
-                  <th style="width: 80px">Удалить?</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(feat, idx) in form.features" :key="idx">
-                  <td data-label="Характеристика">
-                    <select
-                      v-model="feat.feature_id"
-                      @change="onFeatureChange(idx)"
-                    >
-                      <option :value="null">---------</option>
-                      <option
-                        v-for="f in categoryFeatures"
-                        :key="f.id"
-                        :value="f.id"
+            <div v-else>
+              <table class="inline-table">
+                <thead>
+                  <tr>
+                    <th>Характеристика</th>
+                    <th>
+                      Значения (удерживайте Ctrl для множественного выбора)
+                    </th>
+                    <th style="width: 80px">Удалить?</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(feat, idx) in form.features" :key="idx">
+                    <td data-label="Характеристика">
+                      <select
+                        v-model="feat.feature_id"
+                        @change="onFeatureChange(idx)"
                       >
-                        {{ f.name }}
-                      </option>
-                    </select>
-                  </td>
-                  <td data-label="Значение">
-                    <select
-                      v-model="feat.value_id"
-                      :disabled="!feat.feature_id"
-                    >
-                      <option :value="null">
-                        {{
-                          feat.feature_id
-                            ? "---------"
-                            : "Сначала выберите характеристику"
-                        }}
-                      </option>
-                      <option
-                        v-for="fv in getValuesForFeature(feat.feature_id)"
-                        :key="fv.id"
-                        :value="fv.id"
+                        <option :value="null">---------</option>
+                        <option
+                          v-for="f in categoryFeatures"
+                          :key="f.id"
+                          :value="f.id"
+                        >
+                          {{ f.name }}
+                        </option>
+                      </select>
+                    </td>
+                    <td data-label="Значения">
+                      <select
+                        v-model="feat.value_ids"
+                        multiple
+                        class="multi-select"
+                        :disabled="!feat.feature_id"
                       >
-                        {{ fv.value }}
-                      </option>
-                    </select>
-                  </td>
-                  <td data-label="">
-                    <button
-                      type="button"
-                      @click="removeFeature(idx)"
-                      class="btn-remove"
-                    >
-                      Удалить
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <button
-              v-if="form.category"
-              type="button"
-              @click="addFeature"
-              class="btn btn-secondary btn-sm"
-            >
-              ➕ Добавить характеристику
-            </button>
+                        <option v-if="!feat.feature_id" disabled>
+                          Сначала выберите характеристику
+                        </option>
+                        <option
+                          v-for="fv in getValuesForFeature(feat.feature_id)"
+                          :key="fv.id"
+                          :value="fv.id"
+                        >
+                          {{ fv.value }}
+                        </option>
+                      </select>
+                    </td>
+                    <td data-label="">
+                      <button
+                        type="button"
+                        @click="removeFeature(idx)"
+                        class="btn-remove"
+                      >
+                        Удалить
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <button
+                v-if="form.category"
+                type="button"
+                @click="addFeature"
+                class="btn btn-secondary btn-sm"
+              >
+                ➕ Добавить характеристику
+              </button>
+            </div>
           </fieldset>
 
           <!-- ========== ГРУППЫ ТЕГОВ ТОВАРА ========== -->
@@ -531,8 +533,8 @@ interface ProductFeature {
   id?: number;
   feature_id: number | null;
   feature_name?: string;
-  value_id: number | null;
-  value_text?: string;
+  value_ids: number[]; // Изменено с value_id на value_ids для множественного выбора
+  value_texts?: string[]; // Массив текстов значений
 }
 
 interface ProductTagGroup {
@@ -725,12 +727,23 @@ async function loadBrands() {
 // Load features/tags by category (like Django filter_features.js)
 async function loadCategoryData(categoryId: number) {
   try {
+    console.log("Loading category data for id:", categoryId);
     const response = await categoryDataAPI.getByCategory(categoryId);
     const data = response.data;
+
+    console.log("Category data response:", data);
+    console.log("Features:", data.features);
+    console.log("First feature:", data.features?.[0]);
+
     categoryFeatures.value = data.features || [];
     categoryFeatureValues.value = data.feature_values || [];
     categoryTags.value = data.tags || [];
     categoryTagNames.value = data.tag_names || [];
+
+    console.log("Category features loaded:", categoryFeatures.value);
+    if (categoryFeatures.value.length > 0) {
+      console.log("First feature values:", categoryFeatures.value[0].values);
+    }
   } catch (e) {
     console.error("Failed to load category data:", e);
     categoryFeatures.value = [];
@@ -825,14 +838,26 @@ async function editProduct(product: Product) {
       order: img.order,
     }));
 
-    // Features
-    form.features = (p.features || []).map((f: any) => ({
-      id: f.id,
-      feature_id: f.feature_id,
-      feature_name: f.feature_name,
-      value_id: f.value_id,
-      value_text: f.value_text,
-    }));
+    // Features - преобразуем в новый формат с value_ids
+    // Сервер может возвращать массив объектов {feature_id, value_id}
+    // Нужно сгруппировать по feature_id
+    const featuresMap = new Map<number, number[]>();
+    (p.features || []).forEach((f: any) => {
+      if (f.feature_id && f.value_id) {
+        const existing = featuresMap.get(f.feature_id) || [];
+        if (!existing.includes(f.value_id)) {
+          existing.push(f.value_id);
+        }
+        featuresMap.set(f.feature_id, existing);
+      }
+    });
+
+    form.features = Array.from(featuresMap.entries()).map(
+      ([feature_id, value_ids]) => ({
+        feature_id,
+        value_ids,
+      }),
+    );
 
     // Tag groups
     form.tag_groups = (p.tag_groups || []).map((tg: any) => ({
@@ -919,7 +944,7 @@ function onFileChange(event: Event, idx: number) {
 function addFeature() {
   form.features.push({
     feature_id: null,
-    value_id: null,
+    value_ids: [], // Изменено на массив
   });
 }
 
@@ -930,14 +955,23 @@ function removeFeature(idx: number) {
 // Фильтрация значений по выбранной характеристике
 function getValuesForFeature(featureId: number | null) {
   if (!featureId) return [];
+  // Find the feature and return its values
+  const feature = categoryFeatures.value.find((f: any) => f.id === featureId);
+  console.log("Getting values for feature id:", featureId, "feature:", feature);
+  if (feature && feature.values && Array.isArray(feature.values)) {
+    console.log("Found values in feature.values:", feature.values);
+    return feature.values;
+  }
+  // Fallback to searching in categoryFeatureValues (for cases where feature doesn't have values)
+  console.log("Fallback: searching in categoryFeatureValues");
   return categoryFeatureValues.value.filter(
-    (fv: any) => fv.feature_id === featureId
+    (fv: any) => fv.feature_id === featureId,
   );
 }
 
-// Обработка изменения характеристики - сбрасываем значение
+// Обработка изменения характеристики - сбрасываем значения
 function onFeatureChange(idx: number) {
-  form.features[idx].value_id = null;
+  form.features[idx].value_ids = []; // Сброс на пустой массив
 }
 
 // ==================== TAG GROUPS ====================
@@ -958,7 +992,7 @@ function getTagsForGroup(groupNameId: number | null) {
   if (!groupNameId) return [];
   // Находим группу и возвращаем привязанные к ней теги
   const tagName = categoryTagNames.value.find(
-    (tn: any) => tn.id === groupNameId
+    (tn: any) => tn.id === groupNameId,
   );
   if (tagName && tagName.tags) {
     return tagName.tags;
@@ -990,7 +1024,15 @@ async function saveProduct() {
       is_available: form.is_available,
       manufacturer_sku: form.manufacturer_sku,
       internal_sku: form.internal_sku || undefined,
-      features: form.features.filter((f) => f.feature_id && f.value_id),
+      features: form.features
+        .filter((f) => f.feature_id && f.value_ids && f.value_ids.length > 0)
+        .flatMap((f) =>
+          // Разворачиваем каждое значение в отдельный объект
+          f.value_ids.map((value_id) => ({
+            feature_id: f.feature_id,
+            value_id: value_id,
+          })),
+        ),
       tag_groups: form.tag_groups
         .filter((tg) => tg.group_name_id)
         .map((tg) => ({
@@ -1012,7 +1054,7 @@ async function saveProduct() {
       // Update
       const response = await productsAdminAPI.update(
         editingProduct.value.id,
-        productData
+        productData,
       );
       productId = response.data.id;
     } else {

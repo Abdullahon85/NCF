@@ -66,7 +66,7 @@ interface Props {
 interface Emits {
   (
     e: "update:modelValue",
-    value: { min: number | null; max: number | null }
+    value: { min: number | null; max: number | null },
   ): void;
 }
 
@@ -78,7 +78,10 @@ const localMax = ref(props.modelValue.max ?? props.max);
 
 const step = computed(() => {
   const range = props.max - props.min;
-  return range > 1000 ? Math.max(1, Math.round(range / 100)) : 1;
+  // Более мелкий шаг для лучшей точности
+  if (range > 10000) return Math.max(1, Math.round(range / 200));
+  if (range > 1000) return Math.max(1, Math.round(range / 100));
+  return 1;
 });
 
 const trackStyle = computed(() => {
@@ -119,8 +122,9 @@ const onMinSlider = (e: Event) => {
 
 const onMaxSlider = (e: Event) => {
   let value = Number((e.target as HTMLInputElement).value);
-  // Если пользователь двигает до самого конца, всегда ставим props.max
-  if (value >= props.max) {
+
+  // Если значение близко к максимуму (в пределах шага), ставим точно max
+  if (value >= props.max - step.value) {
     value = props.max;
   } else {
     value = clamp(value, localMin.value, props.max);
@@ -152,7 +156,7 @@ watch(
   (newValue) => {
     localMin.value = newValue.min ?? props.min;
     localMax.value = newValue.max ?? props.max;
-  }
+  },
 );
 </script>
 

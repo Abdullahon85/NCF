@@ -218,33 +218,78 @@
               Связаться с нами
             </button>
           </div>
+        </div>
+      </div>
 
-          <!-- Description -->
-          <div v-if="product.description" class="description-section">
-            <h2 class="section-title">Описание</h2>
-            <div
-              class="description-content"
-              v-html="formatContent(product.description)"
-            ></div>
+      <!-- Product Tabs Section -->
+      <div v-if="product" class="product-tabs-layout">
+        <div class="tabs-navigation">
+          <button
+            class="tab-button"
+            :class="{ active: activeTab === 'description' }"
+            @click="activeTab = 'description'"
+          >
+            Описание
+          </button>
+          <button
+            class="tab-button"
+            :class="{ active: activeTab === 'characteristics' }"
+            @click="activeTab = 'characteristics'"
+          >
+            Характеристики
+          </button>
+        </div>
+
+        <div class="tabs-content">
+          <!-- Description Tab -->
+          <div
+            v-show="activeTab === 'description'"
+            class="tab-panel"
+            :class="{ active: activeTab === 'description' }"
+          >
+            <div v-if="product.description" class="description-content">
+              <div v-html="formatContent(product.description)"></div>
+            </div>
+            <div v-else class="empty-state">
+              <p>Описание отсутствует</p>
+            </div>
           </div>
 
-          <!-- Features -->
+          <!-- Characteristics Tab -->
           <div
-            v-if="product.features && product.features.length"
-            class="features-section"
+            v-show="activeTab === 'characteristics'"
+            class="tab-panel"
+            :class="{ active: activeTab === 'characteristics' }"
           >
-            <h2 class="section-title">Характеристики</h2>
-            <div class="features-grid">
-              <div
-                v-for="feature in product.features"
-                :key="feature.id"
-                class="feature-item"
-              >
-                <span class="feature-name">{{ feature.feature_name }}</span>
-                <p class="feature-value">
-                  {{ feature.value_name }}
-                </p>
-              </div>
+            <div
+              v-if="groupedFeatures.length > 0"
+              class="characteristics-table"
+            >
+              <table>
+                <tbody>
+                  <tr
+                    v-for="(feature, index) in groupedFeatures"
+                    :key="index"
+                    class="characteristic-row"
+                  >
+                    <td class="characteristic-name">
+                      {{ feature.feature_name }}
+                    </td>
+                    <td class="characteristic-value">
+                      <span
+                        v-for="(value, vIndex) in feature.values"
+                        :key="vIndex"
+                        class="value-item"
+                      >
+                        {{ value }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div v-else class="empty-state">
+              <p>Характеристики отсутствуют</p>
             </div>
           </div>
         </div>
@@ -327,7 +372,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute } from "vue-router";
 import { productsAPI, contactAPI } from "@/api";
 import ImageGalleryComponent from "@/components/ImageGalleryComponent.vue";
@@ -341,6 +386,37 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const showContactModal = ref(false);
 const isCopied = ref(false);
+const activeTab = ref<"description" | "characteristics">("description");
+
+// Группировка характеристик по feature_name
+const groupedFeatures = computed(() => {
+  if (!product.value?.features || product.value.features.length === 0) {
+    return [];
+  }
+
+  const featuresMap = new Map<string, string[]>();
+
+  product.value.features.forEach((feature) => {
+    const featureName = feature.feature_name;
+    const valueName = feature.value_name;
+
+    if (!featureName || !valueName) return;
+
+    if (!featuresMap.has(featureName)) {
+      featuresMap.set(featureName, []);
+    }
+
+    const values = featuresMap.get(featureName)!;
+    if (!values.includes(valueName)) {
+      values.push(valueName);
+    }
+  });
+
+  return Array.from(featuresMap.entries()).map(([feature_name, values]) => ({
+    feature_name,
+    values,
+  }));
+});
 
 const copySku = async (sku: string | number | undefined) => {
   if (!sku) return;
@@ -415,3 +491,174 @@ onMounted(async () => {
 /* --- brand helpers --- */
 /* product.brand может быть объектом Brand, строкой или id */
 </script>
+
+<style scoped>
+/* ==================== PRODUCT TABS LAYOUT ==================== */
+.product-tabs-layout {
+  margin-top: 48px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.tabs-navigation {
+  display: flex;
+  gap: 0;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 16px 24px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-button:hover {
+  background: rgba(52, 58, 64, 0.05);
+  color: #343a40;
+}
+
+.tab-button.active {
+  color: var(--primary);
+  background: #ffffff;
+  border-bottom-color: var(--primary);
+  font-weight: 600;
+}
+
+.tabs-content {
+  padding: 32px;
+  min-height: 300px;
+}
+
+.tab-panel {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #adb5bd;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Description Content */
+.description-content {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--primary);
+}
+
+/* ==================== CHARACTERISTICS TABLE ==================== */
+.characteristics-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.characteristics-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.characteristic-row {
+  border-bottom: 1px solid var(--primary);
+  transition: background-color 0.2s ease;
+}
+
+.characteristic-row:hover {
+  background: #f8f9fa;
+}
+
+.characteristic-row:last-child {
+  border-bottom: none;
+}
+
+.characteristic-name {
+  padding: 16px 20px;
+  font-weight: 600;
+  color: #343a40;
+  font-size: 14px;
+  width: 35%;
+  background: #f8f9fa;
+}
+
+.characteristic-value {
+  padding: 4px 5px;
+  color: var(--primary);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.value-item {
+  display: block;
+}
+
+/* Убрали ::after для запятых - значения теперь через пробел */
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .product-tabs-layout {
+    margin-top: 32px;
+    border-radius: 8px;
+  }
+
+  .tabs-navigation {
+    flex-direction: column;
+  }
+
+  .tab-button {
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+    padding: 14px 20px;
+  }
+
+  .tab-button.active {
+    border-left: 4px solid #343a40;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .tabs-content {
+    padding: 20px 16px;
+  }
+
+  .characteristic-name,
+  .characteristic-value {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .characteristic-name {
+    padding-bottom: 8px;
+  }
+
+  .characteristic-value {
+    padding-top: 8px;
+  }
+}
+</style>

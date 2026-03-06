@@ -7,7 +7,7 @@ import type {
 } from "axios";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? "https://ncb-1.onrender.com/api";
+  import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
 //   "http://localhost:8000/api" "https://ncb-1.onrender.com/api" "https://ncb-r1l6.onrender.com/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
 // ============ SECURITY CONSTANTS ============
 const TOKEN_KEY = "admin_token";
@@ -25,7 +25,7 @@ class RateLimiter {
 
     if (timeSinceLastRequest < RATE_LIMIT_DELAY) {
       await new Promise((resolve) =>
-        setTimeout(resolve, RATE_LIMIT_DELAY - timeSinceLastRequest)
+        setTimeout(resolve, RATE_LIMIT_DELAY - timeSinceLastRequest),
       );
     }
 
@@ -110,7 +110,7 @@ adminApi.interceptors.request.use(
               `${API_BASE_URL}/admin/auth/refresh/`,
               {
                 refresh: refreshToken,
-              }
+              },
             );
             tokenStorage.setTokens(data.access);
             config.headers.Authorization = `Bearer ${data.access}`;
@@ -127,7 +127,7 @@ adminApi.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // ============ RESPONSE INTERCEPTOR ============
@@ -155,7 +155,7 @@ adminApi.interceptors.response.use(
             `${API_BASE_URL}/admin/auth/refresh/`,
             {
               refresh: refreshToken,
-            }
+            },
           );
           tokenStorage.setTokens(data.access);
 
@@ -185,7 +185,7 @@ adminApi.interceptors.response.use(
     });
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // ============ HELPER: VALIDATE ID ============
@@ -432,8 +432,12 @@ export const tagNamesAdminAPI = {
 
 // ============ FEATURES API ============
 export const featuresAdminAPI = {
-  getAll: (params?: { search?: string; category?: number }) =>
-    adminApi.get("/admin/features/", { params }),
+  getAll: (params?: {
+    search?: string;
+    category?: number;
+    page?: number;
+    page_size?: number;
+  }) => adminApi.get("/admin/features/", { params }),
 
   getById: (id: number) => {
     validateId(id, "feature");
@@ -451,12 +455,19 @@ export const featuresAdminAPI = {
     validateId(id, "feature");
     return adminApi.delete(`/admin/features/${id}/`);
   },
+
+  debugFirst: () => adminApi.get("/admin/features/debug_first/"),
 };
 
 // ============ FEATURE VALUES API ============
 export const featureValuesAdminAPI = {
-  getAll: (params?: { search?: string; category?: number; feature?: number }) =>
-    adminApi.get("/admin/feature-values/", { params }),
+  getAll: (params?: {
+    search?: string;
+    category?: number;
+    feature?: number;
+    page?: number;
+    page_size?: number;
+  }) => adminApi.get("/admin/feature-values/", { params }),
 
   getById: (id: number) => {
     validateId(id, "feature value");
@@ -633,7 +644,7 @@ export const productsAdminAPI = {
     validateId(productId, "product");
     validateId(imageId, "image");
     return adminApi.delete(
-      `/admin/products/${productId}/delete-image/${imageId}/`
+      `/admin/products/${productId}/delete-image/${imageId}/`,
     );
   },
 };

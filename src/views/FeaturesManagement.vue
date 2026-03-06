@@ -43,7 +43,7 @@
       <select
         v-if="activeTab === 'values'"
         v-model="featureFilter"
-        @change="loadItems"
+        @change="onFeatureFilterChange"
         class="filter-select"
       >
         <option value="">Все характеристики</option>
@@ -57,8 +57,14 @@
       </select>
     </div>
 
+    <!-- Loading Indicator -->
+    <div v-if="loading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Загрузка...</p>
+    </div>
+
     <!-- Features Table -->
-    <div v-if="activeTab === 'features'" class="table-container">
+    <div v-if="activeTab === 'features' && !loading" class="table-container">
       <table class="data-table">
         <thead>
           <tr>
@@ -119,8 +125,29 @@
       </table>
     </div>
 
+    <!-- Пагинация для характеристик -->
+    <div v-if="activeTab === 'features' && totalPages > 1" class="pagination">
+      <button
+        @click="goToPage(currentPage - 1)"
+        :disabled="currentPage === 1"
+        class="btn btn-secondary"
+      >
+        ← Назад
+      </button>
+      <span class="page-info"
+        >Страница {{ currentPage }} из {{ totalPages }}</span
+      >
+      <button
+        @click="goToPage(currentPage + 1)"
+        :disabled="currentPage === totalPages"
+        class="btn btn-secondary"
+      >
+        Далее →
+      </button>
+    </div>
+
     <!-- Values Table -->
-    <div v-if="activeTab === 'values'" class="table-container">
+    <div v-if="activeTab === 'values' && !loading" class="table-container">
       <table class="data-table">
         <thead>
           <tr>
@@ -136,10 +163,26 @@
             <td data-label="ID">{{ item.id }}</td>
             <td data-label="Значение" class="name-cell">{{ item.value }}</td>
             <td data-label="Характеристика">
-              <span v-if="item.feature_name" class="badge badge-primary">{{
-                item.feature_name
-              }}</span>
-              <span v-else class="badge badge-warning">Не привязано</span>
+              <div class="values-preview">
+                <span
+                  v-if="item.features_info && item.features_info.length > 0"
+                  class="values-chips"
+                >
+                  <span
+                    v-for="feat in item.features_info.slice(0, 3)"
+                    :key="feat.id"
+                    class="chip"
+                    >{{ feat.name }}</span
+                  >
+                  <span
+                    v-if="item.features_info.length > 3"
+                    class="chip chip-more"
+                  >
+                    +{{ item.features_info.length - 3 }}
+                  </span>
+                </span>
+                <span v-else class="no-values">Не привязано</span>
+              </div>
             </td>
             <td data-label="Категория">{{ item.category_name || "—" }}</td>
             <td data-label="Действия">
@@ -159,6 +202,27 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Пагинация для значений -->
+    <div v-if="activeTab === 'values' && totalPages > 1" class="pagination">
+      <button
+        @click="goToPage(currentPage - 1)"
+        :disabled="currentPage === 1"
+        class="btn btn-secondary"
+      >
+        ← Назад
+      </button>
+      <span class="page-info"
+        >Страница {{ currentPage }} из {{ totalPages }}</span
+      >
+      <button
+        @click="goToPage(currentPage + 1)"
+        :disabled="currentPage === totalPages"
+        class="btn btn-secondary"
+      >
+        Далее →
+      </button>
     </div>
 
     <!-- Feature Modal (с выбором значений) -->
@@ -201,7 +265,15 @@
 
           <!-- Блок привязки значений -->
           <div class="form-group" v-if="featureForm.category">
-            <label>Привязанные значения</label>
+            <label>
+              Привязанные значения
+              <span
+                v-if="featureForm.selectedValues.length > 0"
+                class="count-badge"
+              >
+                {{ featureForm.selectedValues.length }}
+              </span>
+            </label>
 
             <!-- Текущие привязанные значения -->
             <div class="selected-values">
@@ -228,39 +300,57 @@
             </div>
 
             <!-- Выбор из доступных значений категории -->
-            <div class="available-values-section">
-              <label>Добавить из существующих значений категории:</label>
-              <div class="available-values-list">
-                <div
-                  v-if="availableValuesForFeature.length > 0"
-                  class="values-chips-select"
+            <div class="available-values">
+              <div class="values-header">
+                <label
+                  >Доступные значения для привязки (можно выбрать
+                  несколько):</label
                 >
-                  <button
-                    type="button"
-                    v-for="val in availableValuesForFeature"
-                    :key="val.id"
-                    @click="addSelectedValue(val)"
-                    class="chip chip-add"
-                    :disabled="isValueSelected(val.id)"
-                  >
-                    {{ val.value }} +
-                  </button>
+                <button
+                  v-if="availableValuesForFeature.length > 0"
+                  type="button"
+                  @click="selectAllValues"
+                  class="btn-select-all"
+                >
+                  {{ allValuesSelected ? "✓ Все выбраны" : "Выбрать все" }}
+                </button>
+              </div>
+              <div class="values-list">
+                <div
+                  v-for="val in availableValuesForFeature"
+                  :key="val.id"
+                  class="value-item"
+                  :class="{ selected: isValueSelected(val.id) }"
+                  @click="toggleValueSelection(val)"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="isValueSelected(val.id)"
+                    @click.stop="toggleValueSelection(val)"
+                    class="value-checkbox"
+                  />
+                  <span class="value-name">{{ val.value }}</span>
+                  <span class="value-check">{{
+                    isValueSelected(val.id) ? "✓" : "+"
+                  }}</span>
                 </div>
-                <p v-else class="hint-text">
+                <div
+                  v-if="availableValuesForFeature.length === 0"
+                  class="no-items"
+                >
                   Все значения уже привязаны или нет доступных значений
-                </p>
+                </div>
               </div>
             </div>
 
             <!-- Быстрое добавление новых значений -->
             <div class="quick-add-section">
-              <label>Или создайте новые значения (через запятую):</label>
-              <div class="quick-add-form">
+              <label>Быстрое добавление значений (через запятую):</label>
+              <div class="quick-add-row">
                 <input
                   v-model="newValuesInput"
                   type="text"
                   placeholder="Красный, Синий, Зелёный..."
-                  class="quick-add-input"
                   @keydown.enter.prevent="quickAddValues"
                 />
                 <button
@@ -269,7 +359,7 @@
                   class="btn btn-secondary"
                   :disabled="!newValuesInput.trim()"
                 >
-                  Создать
+                  ➕ Добавить
                 </button>
               </div>
               <div v-if="quickAddStatus" class="quick-add-status">
@@ -328,24 +418,9 @@
               </option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Характеристика</label>
-            <select v-model="valueForm.feature" :disabled="!valueForm.category">
-              <option :value="null">
-                {{
-                  valueForm.category
-                    ? "— Без привязки —"
-                    : "Сначала выберите категорию"
-                }}
-              </option>
-              <option
-                v-for="feat in featuresForValueModal"
-                :key="feat.id"
-                :value="feat.id"
-              >
-                {{ feat.name }}
-              </option>
-            </select>
+          <div class="info-message">
+            💡 Примечание: значения привязываются к характеристикам при
+            редактировании самих характеристик
           </div>
           <div v-if="error" class="error-msg">{{ error }}</div>
           <div class="modal-actions">
@@ -420,6 +495,13 @@ const categoryFilter = ref("");
 const featureFilter = ref("");
 const saving = ref(false);
 const error = ref("");
+const loading = ref(false);
+
+// Pagination
+const currentPage = ref(1);
+const pageSize = 20;
+const totalCountFeatures = ref(0);
+const totalCountValues = ref(0);
 
 // Feature form с выбранными значениями
 const showFeatureModal = ref(false);
@@ -441,15 +523,21 @@ const availableValuesForFeature = computed(() => {
   return allCategoryValues.value.filter((v) => !selectedIds.includes(v.id));
 });
 
+// Проверка, выбраны ли все доступные значения
+const allValuesSelected = computed(() => {
+  return (
+    availableValuesForFeature.value.length === 0 &&
+    allCategoryValues.value.length > 0
+  );
+});
+
 // Value form
 const showValueModal = ref(false);
 const editingValue = ref<any>(null);
 const valueForm = reactive({
   value: "",
   category: null as number | null,
-  feature: null as number | null,
 });
-const featuresForValueModal = ref<any[]>([]);
 
 // Delete
 const showDeleteModal = ref(false);
@@ -463,34 +551,82 @@ const filteredFeatures = computed(() => {
   return features.value.filter((f) => f.category == categoryFilter.value);
 });
 
+// Pagination computed
+const totalPages = computed(() => {
+  const count =
+    activeTab.value === "features"
+      ? totalCountFeatures.value
+      : totalCountValues.value;
+  return Math.ceil(count / pageSize);
+});
+
 let searchTimeout: number;
 function debouncedSearch() {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(loadItems, 300);
+  searchTimeout = setTimeout(() => {
+    currentPage.value = 1;
+    loadItems();
+  }, 300);
 }
 
 function onCategoryFilterChange() {
   featureFilter.value = "";
+  currentPage.value = 1;
+  loadItems();
+}
+
+function onFeatureFilterChange() {
+  currentPage.value = 1;
   loadItems();
 }
 
 async function loadItems() {
-  const params: any = {};
+  loading.value = true;
+  const params: any = {
+    page: currentPage.value,
+    page_size: pageSize,
+  };
   if (search.value) params.search = search.value;
   if (categoryFilter.value) params.category = categoryFilter.value;
 
   try {
-    const featuresRes = await featuresAdminAPI.getAll(params);
-    features.value = featuresRes.data.results || featuresRes.data;
+    // Загружаем только данные для активной вкладки
+    if (activeTab.value === "features") {
+      console.log("Loading features with params:", params);
+      const featuresRes = await featuresAdminAPI.getAll(params);
+      console.log("Full features response:", featuresRes);
+      console.log("Features data:", featuresRes.data);
 
-    const valueParams: any = { ...params };
-    if (featureFilter.value) valueParams.feature = featureFilter.value;
+      features.value = featuresRes.data.results || featuresRes.data;
+      totalCountFeatures.value =
+        featuresRes.data.count || features.value.length;
 
-    const valuesRes = await featureValuesAdminAPI.getAll(valueParams);
-    featureValues.value = valuesRes.data.results || valuesRes.data;
+      // Логируем что получилось
+      console.log("Features loaded into component:", features.value);
+      if (features.value.length > 0) {
+        console.log("First feature:", features.value[0]);
+        console.log("First feature values:", features.value[0].values);
+      }
+    } else {
+      const valueParams: any = { ...params };
+      if (featureFilter.value) valueParams.feature = featureFilter.value;
+
+      const valuesRes = await featureValuesAdminAPI.getAll(valueParams);
+      featureValues.value = valuesRes.data.results || valuesRes.data;
+      totalCountValues.value =
+        valuesRes.data.count || featureValues.value.length;
+    }
   } catch (e) {
-    console.error(e);
+    console.error("Error loading items:", e);
+  } finally {
+    loading.value = false;
   }
+}
+
+function goToPage(page: number) {
+  if (page < 1 || page > totalPages.value) return;
+  currentPage.value = page;
+  loadItems();
 }
 
 async function loadCategories() {
@@ -505,7 +641,10 @@ async function loadCategories() {
 // Загрузка значений категории для формы характеристики
 async function loadCategoryValues(categoryId: number) {
   try {
-    const res = await featureValuesAdminAPI.getAll({ category: categoryId });
+    const res = await featureValuesAdminAPI.getAll({
+      category: categoryId,
+      page_size: 500, // Ограничиваем первоначальную загрузку
+    });
     allCategoryValues.value = res.data.results || res.data;
   } catch (e) {
     console.error(e);
@@ -514,16 +653,6 @@ async function loadCategoryValues(categoryId: number) {
 }
 
 // Загрузка характеристик для формы значений
-async function loadFeaturesForCategory(categoryId: number) {
-  try {
-    const res = await featuresAdminAPI.getAll({ category: categoryId });
-    featuresForValueModal.value = res.data.results || res.data;
-  } catch (e) {
-    console.error(e);
-    featuresForValueModal.value = [];
-  }
-}
-
 // ==================== Feature Form ====================
 
 function openCreateModal() {
@@ -532,7 +661,7 @@ function openCreateModal() {
     editingFeature.value = null;
     featureForm.name = "";
     featureForm.category = null;
-    featureForm.selectedValues = [];
+    featureForm.selectedValues.length = 0;
     featureForm.originalValueIds = [];
     allCategoryValues.value = [];
     newValuesInput.value = "";
@@ -541,32 +670,39 @@ function openCreateModal() {
     editingValue.value = null;
     valueForm.value = "";
     valueForm.category = null;
-    valueForm.feature = null;
-    featuresForValueModal.value = [];
     showValueModal.value = true;
   }
 }
 
 async function editFeature(item: any) {
+  console.log("Editing feature:", item);
+  console.log("Feature values from API:", item.values);
+
   editingFeature.value = item;
   featureForm.name = item.name;
   featureForm.category = item.category;
-  featureForm.selectedValues = item.values ? [...item.values] : [];
-  featureForm.originalValueIds = item.values
-    ? item.values.map((v: any) => v.id)
-    : [];
   newValuesInput.value = "";
   error.value = "";
+
+  // Явно очищаем и заполняем selectedValues
+  featureForm.selectedValues.length = 0;
+  if (item.values && Array.isArray(item.values)) {
+    featureForm.selectedValues.push(...item.values);
+    featureForm.originalValueIds = item.values.map((v: any) => v.id);
+  } else {
+    featureForm.originalValueIds = [];
+  }
 
   if (item.category) {
     await loadCategoryValues(item.category);
   }
 
   showFeatureModal.value = true;
+  console.log("Form selectedValues after edit:", featureForm.selectedValues);
 }
 
 async function onFeatureCategoryChange() {
-  featureForm.selectedValues = [];
+  featureForm.selectedValues.length = 0;
   featureForm.originalValueIds = [];
   if (featureForm.category) {
     await loadCategoryValues(featureForm.category);
@@ -587,8 +723,29 @@ function addSelectedValue(val: FeatureValue) {
 
 function removeSelectedValue(val: FeatureValue) {
   featureForm.selectedValues = featureForm.selectedValues.filter(
-    (v) => v.id !== val.id
+    (v) => v.id !== val.id,
   );
+}
+
+// Toggle выбор значения (добавить/удалить)
+function toggleValueSelection(val: FeatureValue) {
+  if (isValueSelected(val.id)) {
+    removeSelectedValue(val);
+  } else {
+    addSelectedValue(val);
+  }
+}
+
+// Выбрать все доступные значения или снять выбор
+function selectAllValues() {
+  if (allValuesSelected.value) {
+    // Снять выбор со всех
+    featureForm.selectedValues.length = 0;
+  } else {
+    // Выбрать все доступные
+    featureForm.selectedValues.length = 0;
+    featureForm.selectedValues.push(...availableValuesForFeature.value);
+  }
 }
 
 // Быстрое создание новых значений и привязка к характеристике
@@ -602,26 +759,27 @@ async function quickAddValues() {
   if (values.length === 0) return;
 
   let created = 0;
+  let linked = 0;
   quickAddStatus.value = "";
 
   for (const val of values) {
     // Проверяем, существует ли уже такое значение
     const existing = allCategoryValues.value.find(
-      (v) => v.value.toLowerCase() === val.toLowerCase()
+      (v) => v.value.toLowerCase() === val.toLowerCase(),
     );
 
     if (existing) {
       // Добавляем существующее если ещё не выбрано
       if (!featureForm.selectedValues.some((v) => v.id === existing.id)) {
         featureForm.selectedValues.push(existing);
+        linked++;
       }
     } else {
       try {
-        // Создаём значение с привязкой к категории (feature будет привязан при сохранении)
+        // Создаём значение с привязкой к категории (привязка к feature происходит при сохранении характеристики)
         const res = await featureValuesAdminAPI.create({
           value: val,
           category: featureForm.category,
-          feature: editingFeature.value?.id || null,
         });
 
         const newVal = res.data;
@@ -637,12 +795,18 @@ async function quickAddValues() {
   newValuesInput.value = "";
 
   // Show status message
-  if (created > 0) {
-    quickAddStatus.value = `✅ Создано значений: ${created}`;
-    setTimeout(() => {
-      quickAddStatus.value = "";
-    }, 3000);
-  }
+  const messages = [];
+  if (created > 0) messages.push(`✅ Создано: ${created}`);
+  if (linked > 0) messages.push(`🔗 Привязано: ${linked}`);
+
+  quickAddStatus.value =
+    messages.length > 0
+      ? messages.join(", ")
+      : "Нет новых значений для добавления";
+
+  setTimeout(() => {
+    quickAddStatus.value = "";
+  }, 3000);
 }
 
 async function saveFeature() {
@@ -650,57 +814,31 @@ async function saveFeature() {
     saving.value = true;
     error.value = "";
 
-    let featureId: number;
+    // Подготовка данных для отправки
+    const data = {
+      name: featureForm.name,
+      category: featureForm.category,
+      value_ids: featureForm.selectedValues.map((v) => v.id),
+    };
+
+    console.log("Saving feature with data:", data);
+    console.log("Selected values being sent:", featureForm.selectedValues);
 
     if (editingFeature.value) {
-      await featuresAdminAPI.update(editingFeature.value.id, {
-        name: featureForm.name,
-        category: featureForm.category,
-      });
-      featureId = editingFeature.value.id;
+      await featuresAdminAPI.update(editingFeature.value.id, data);
     } else {
-      const res = await featuresAdminAPI.create({
-        name: featureForm.name,
-        category: featureForm.category,
-      });
-      featureId = res.data.id;
-    }
-
-    // Обновляем привязки значений
-    const selectedIds = featureForm.selectedValues.map((v) => v.id);
-    const originalIds = featureForm.originalValueIds;
-
-    // Значения для отвязки (были, но теперь нет)
-    const toUnlink = originalIds.filter((id) => !selectedIds.includes(id));
-
-    // Значения для привязки (новые)
-    const toLink = selectedIds.filter((id) => !originalIds.includes(id));
-
-    // Отвязываем
-    for (const valueId of toUnlink) {
-      try {
-        await featureValuesAdminAPI.update(valueId, { feature: null });
-      } catch (e) {
-        console.error(`Failed to unlink value ${valueId}:`, e);
-      }
-    }
-
-    // Привязываем
-    for (const valueId of toLink) {
-      try {
-        await featureValuesAdminAPI.update(valueId, { feature: featureId });
-      } catch (e) {
-        console.error(`Failed to link value ${valueId}:`, e);
-      }
+      await featuresAdminAPI.create(data);
     }
 
     showFeatureModal.value = false;
-    loadItems();
+    await loadItems();
+    console.log("Feature saved and data reloaded");
   } catch (e: any) {
     error.value =
       e.response?.data?.detail ||
       e.response?.data?.name?.[0] ||
       "Ошибка сохранения";
+    console.error("Error saving feature:", error.value);
   } finally {
     saving.value = false;
   }
@@ -712,23 +850,13 @@ async function editValue(item: any) {
   editingValue.value = item;
   valueForm.value = item.value;
   valueForm.category = item.category;
-  valueForm.feature = item.feature;
   error.value = "";
-
-  if (item.category) {
-    await loadFeaturesForCategory(item.category);
-  }
 
   showValueModal.value = true;
 }
 
 function onValueCategoryChange() {
-  valueForm.feature = null;
-  if (valueForm.category) {
-    loadFeaturesForCategory(valueForm.category);
-  } else {
-    featuresForValueModal.value = [];
-  }
+  // Категория изменена
 }
 
 async function saveValue() {
@@ -783,12 +911,24 @@ async function performDelete() {
 
 watch(activeTab, () => {
   featureFilter.value = "";
+  currentPage.value = 1;
   loadItems();
 });
 
-onMounted(() => {
+onMounted(async () => {
   loadItems();
   loadCategories();
+
+  // Debug check for feature values
+  setTimeout(async () => {
+    try {
+      console.log("=== DEBUG: Checking first feature ===");
+      const debugRes = await featuresAdminAPI.debugFirst();
+      console.log("Debug response:", debugRes.data);
+    } catch (e) {
+      console.error("Debug API error:", e);
+    }
+  }, 1000);
 });
 </script>
 
@@ -874,9 +1014,56 @@ onMounted(() => {
 .selected-values {
   margin-bottom: 16px;
   padding: 12px;
-  background: var(--surface-color, #f8f9fa);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
   border-radius: 8px;
-  min-height: 50px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.selected-values .values-chips-edit {
+  width: 100%;
+}
+
+.chip-removable {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 8px 6px 12px;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.chip-removable:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.chip-remove:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
 }
 
 .available-values-section {
@@ -899,17 +1086,155 @@ onMounted(() => {
   overflow-y: auto;
 }
 
+/* Улучшенные стили для выбора значений (как у тегов) */
+.available-values {
+  margin-bottom: 16px;
+}
+
+.values-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.values-header label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #666);
+  margin: 0;
+}
+
+.btn-select-all {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-select-all:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-select-all:active {
+  transform: translateY(0);
+}
+
+.values-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  padding: 12px;
+  background: white;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.value-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  gap: 8px;
+}
+
+.value-item:hover {
+  background: #e9ecef;
+  border-color: var(--primary-color, #007bff);
+  transform: translateY(-1px);
+}
+
+.value-item.selected {
+  background: #d1fae5;
+  border-color: #059669;
+  color: #065f46;
+}
+
+.value-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary-color, #007bff);
+  flex-shrink: 0;
+}
+
+.value-item.selected .value-checkbox {
+  accent-color: #059669;
+}
+
+.value-name {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.value-check {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--primary-color, #007bff);
+}
+
+.value-item.selected .value-check {
+  color: #059669;
+}
+
+.no-items {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted, #888);
+  font-style: italic;
+  font-size: 13px;
+}
+
 .quick-add-section {
   margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color, #e0e0e0);
+  padding: 16px;
+  background: #f8f9fa;
+  border: 1px dashed #dee2e6;
+  border-radius: 8px;
 }
 
 .quick-add-section label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   font-size: 13px;
+  font-weight: 500;
   color: var(--text-secondary, #666);
+}
+
+.quick-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.quick-add-row input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.quick-add-row input:focus {
+  outline: none;
+  border-color: var(--primary-color, #007bff);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 .quick-add-form {
@@ -956,6 +1281,21 @@ onMounted(() => {
   font-size: 12px;
 }
 
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
 .badge-warning {
   background-color: var(--warning-color, #ffc107);
   color: #212529;
@@ -966,6 +1306,17 @@ onMounted(() => {
 
 .modal-lg {
   max-width: 700px;
+}
+
+.info-message {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #e7f3ff 0%, #d0e7ff 100%);
+  border-left: 4px solid var(--primary-color, #007bff);
+  border-radius: 6px;
+  color: var(--text-color, #333);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 600px) {

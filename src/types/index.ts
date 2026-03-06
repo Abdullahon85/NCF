@@ -68,7 +68,8 @@ export interface ProductFeature {
   feature_name: string;
   feature_id?: number;
   value_id?: number;
-  value_name: string | null;
+  value_name?: string | null;
+  value_names?: string[]; // Массив значений для одной характеристики
 }
 
 export interface NewsItem {
