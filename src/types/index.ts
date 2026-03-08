@@ -70,6 +70,7 @@ export interface ProductFeature {
   value_id?: number;
   value_name?: string | null;
   value_names?: string[]; // Массив значений для одной характеристики
+  group_name?: string | null; // Группа характеристики (опционально, для группировки в сравнении)
 }
 
 export interface NewsItem {
@@ -163,6 +164,7 @@ export interface Tag {
   name: string;
   slug: string;
   category?: number;
+  product_count?: number;
 }
 export interface ProductTagGroup {
   id: number;

@@ -19,7 +19,7 @@ import type {
 } from "@/types";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? "https://ncb-1.onrender.com/api";
+  import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000/api";
 //   "http://127.0.0.1:8000/api" "https://ncb-1.onrender.com/api" "https://ncb-r1l6.onrender.com/api"  "https://nargizacompanyb.onrender.com/api" "https://a673a7823281.ngrok-free.app/api"
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -93,8 +93,11 @@ export const categoriesAPI = {
 
   getBrands: (slug: string) => api.get<Brand[]>(`/categories/${slug}/brands/`),
   // Endpoint may return either a flat Tag[] or grouped ProductTagGroup[] depending on backend.
-  getTags: (slug: string) =>
-    api.get<Tag[] | ProductTagGroup[]>(`/categories/${slug}/tags/`),
+  getTags: (
+    slug: string,
+    params?: { price_min?: number | null; price_max?: number | null },
+  ) =>
+    api.get<Tag[] | ProductTagGroup[]>(`/categories/${slug}/tags/`, { params }),
   getFeatured: () =>
     api.get("/categories/", {
       params: {

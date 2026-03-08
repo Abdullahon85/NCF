@@ -88,14 +88,25 @@
         <div v-for="group in tagGroups" :key="group.id" class="filter-group">
           <label>{{ group.group_name }}</label>
           <div class="tags-list">
-            <label v-for="tag in group.tags" :key="tag.slug" class="tag-item">
+            <label
+              v-for="tag in group.tags.filter(
+                (t) => (t.product_count ?? 1) > 0,
+              )"
+              :key="tag.slug"
+              class="tag-item"
+            >
               <input
                 type="checkbox"
                 :value="tag.slug"
                 :checked="filters.tags.includes(tag.slug)"
                 @change="toggleTag(tag.slug)"
               />
-              <span>{{ tag.name }}</span>
+              <span
+                >{{ tag.name
+                }}<span v-if="tag.product_count !== undefined" class="tag-count"
+                  >&nbsp;({{ tag.product_count }})</span
+                ></span
+              >
             </label>
           </div>
         </div>
@@ -280,12 +291,27 @@ const loadCategoryInfo = async (): Promise<void> => {
 };
 
 /**
- * Загрузка тегов для текущей категории
+ * Загрузка тегов для текущей категории (с учётом текущего фильтра цены)
  */
 const loadTags = async (): Promise<void> => {
   if (!categorySlug.value) return;
   try {
-    const response = await categoriesAPI.getTags(categorySlug.value);
+    const params: { price_min?: number; price_max?: number } = {};
+    if (
+      filters.priceMin !== null &&
+      priceRange.min !== null &&
+      filters.priceMin > priceRange.min
+    ) {
+      params.price_min = filters.priceMin;
+    }
+    if (
+      filters.priceMax !== null &&
+      priceRange.max !== null &&
+      filters.priceMax < priceRange.max
+    ) {
+      params.price_max = filters.priceMax;
+    }
+    const response = await categoriesAPI.getTags(categorySlug.value, params);
     const data = response.data;
 
     // Проверяем формат ответа
@@ -458,6 +484,7 @@ const onPriceFilterChange = (value: {
   priceDebounceTimeout = setTimeout(() => {
     pagination.page = 1;
     loadProducts();
+    loadTags();
   }, 800);
 };
 
@@ -549,6 +576,7 @@ const resetFilters = () => {
   searchInput.value = "";
   pagination.page = 1;
   showFilters.value = false;
+  loadTags();
   loadProducts();
 };
 

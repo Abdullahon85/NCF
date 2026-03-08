@@ -16,6 +16,8 @@ const ContactPage = () => import("../views/ContactPage.vue");
 const NotFound = () => import("../views/NotFound.vue");
 const Brand = () => import("../views/Brand.vue");
 const AllBrandsPage = () => import("../views/AllBrandsPage.vue");
+const FavoritesPage = () => import("../views/FavoritesPage.vue");
+const ComparePage = () => import("../views/ComparePage.vue");
 
 // Admin imports (lazy loaded)
 const AdminLayout = () => import("../components/admin/AdminLayout.vue");
@@ -43,6 +45,16 @@ const routes: RouteRecordRaw[] = [
     path: "/brands",
     name: "AllBrands",
     component: AllBrandsPage,
+  },
+  {
+    path: "/favorites",
+    name: "Favorites",
+    component: FavoritesPage,
+  },
+  {
+    path: "/compare",
+    name: "Compare",
+    component: ComparePage,
   },
   {
     path: "/catalog",
