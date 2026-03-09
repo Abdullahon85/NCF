@@ -166,7 +166,7 @@ onMounted(async () => {
 <style scoped>
 .hero-banner {
   padding: 0;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .banner-container {
@@ -174,7 +174,6 @@ onMounted(async () => {
   margin: 0 auto;
   padding: 0 16px;
 }
-
 
 .category-skeleton {
   background: var(--gray-100);
@@ -196,5 +195,30 @@ onMounted(async () => {
   background: var(--gray-200);
   border-radius: 4px;
   width: 70%;
+}
+
+@media (max-width: 768px) {
+  .hero-banner {
+    margin-bottom: 4px;
+  }
+
+  .banner-container {
+    padding: 0;
+  }
+
+  .category-skeleton {
+    min-height: 140px;
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .skeleton-image {
+    height: 90px;
+    margin-bottom: 8px;
+  }
+
+  .skeleton-text {
+    height: 16px;
+  }
 }
 </style>

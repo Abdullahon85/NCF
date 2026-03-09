@@ -87,10 +87,12 @@ const handleClick = (_tab: (typeof tabs)[0]) => {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    height: 64px;
-    background: var(--white);
-    border-top: 1px solid var(--gray-200);
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+    height: 60px;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.04);
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
@@ -103,10 +105,14 @@ const handleClick = (_tab: (typeof tabs)[0]) => {
     gap: 2px;
     flex: 1;
     height: 100%;
-    color: var(--gray-500);
+    color: var(--gray-400);
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color 0.15s ease;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav-item:active {
+    opacity: 0.7;
   }
 
   .bottom-nav-item.active {
@@ -115,6 +121,7 @@ const handleClick = (_tab: (typeof tabs)[0]) => {
 
   .bottom-nav-item.active .bottom-nav-icon :deep(svg) {
     stroke: var(--primary);
+    stroke-width: 2.5;
   }
 
   .bottom-nav-icon {
@@ -133,20 +140,21 @@ const handleClick = (_tab: (typeof tabs)[0]) => {
 
   .bottom-nav-badge {
     position: absolute;
-    top: 6px;
-    right: calc(50% - 18px);
-    min-width: 16px;
-    height: 16px;
+    top: 4px;
+    right: calc(50% - 20px);
+    min-width: 17px;
+    height: 17px;
     padding: 0 4px;
     border-radius: 99px;
     background: var(--error);
     color: var(--white);
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     line-height: 1;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
   }
 }
 </style>
