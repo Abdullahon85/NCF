@@ -7126,10 +7126,145 @@ tr.unread {
 }
 
 /* Tablet (1024px and below) */
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    width: 70px;
+  }
+
+  .admin-sidebar .nav-label,
+  .admin-sidebar .nav-badge,
+  .admin-sidebar .sidebar-header h2 {
+    display: none;
+  }
+
+  .admin-main {
+    margin-left: 70px;
+  }
+}
 
 /* Mobile (768px and below) */
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-overlay {
+    display: block;
+  }
+
+  .admin-sidebar {
+    width: 260px;
+    transform: translateX(-100%);
+    z-index: 1100;
+  }
+
+  .admin-sidebar .nav-label,
+  .admin-sidebar .nav-badge,
+  .admin-sidebar .sidebar-header h2 {
+    display: inline;
+  }
+
+  .admin-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .admin-main {
+    margin-left: 0;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-main.expanded {
+    margin-left: 0;
+  }
+
+  .admin-header {
+    padding: 12px 16px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-left h1 {
+    font-size: 1.1rem;
+  }
+
+  .user-name,
+  .dropdown-arrow {
+    display: none;
+  }
+
+  .admin-content {
+    padding: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Admin layout needs full width, override #app overflow-x */
+  .admin-layout {
+    overflow-x: visible;
+  }
+
+  /* Tables should scroll independently */
+  .data-table-wrapper,
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Form layouts */
+  .form-row,
+  .form-grid {
+    flex-direction: column;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Action buttons wrap */
+  .actions,
+  .toolbar,
+  .page-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .actions .btn,
+  .toolbar .btn,
+  .page-actions .btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+}
 
 /* Small Mobile (480px and below) */
+@media (max-width: 480px) {
+  .admin-content {
+    padding: 12px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-header {
+    padding: 10px 12px;
+  }
+
+  .header-left h1 {
+    font-size: 1rem;
+  }
+}
 
 /* Extra Small Mobile (375px and below) */
 
@@ -7642,7 +7777,7 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.20);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -8811,10 +8946,26 @@ textarea:focus-visible {
   cursor: pointer;
   outline: none;
 }
-.status-select.status-new { border-color: #f59e0b; color: #92400e; background: #fef3c7; }
-.status-select.status-processing { border-color: #3b82f6; color: #1e40af; background: #dbeafe; }
-.status-select.status-completed { border-color: #22c55e; color: #14532d; background: #dcfce7; }
-.status-select.status-cancelled { border-color: #ef4444; color: #7f1d1d; background: #fee2e2; }
+.status-select.status-new {
+  border-color: #f59e0b;
+  color: #92400e;
+  background: #fef3c7;
+}
+.status-select.status-processing {
+  border-color: #3b82f6;
+  color: #1e40af;
+  background: #dbeafe;
+}
+.status-select.status-completed {
+  border-color: #22c55e;
+  color: #14532d;
+  background: #dcfce7;
+}
+.status-select.status-cancelled {
+  border-color: #ef4444;
+  color: #7f1d1d;
+  background: #fee2e2;
+}
 
 /* Expanded order details */
 .order-details-row td {
@@ -8863,13 +9014,15 @@ textarea:focus-visible {
   border-top: 2px solid var(--color-border, #e2e8f0);
   border-bottom: none;
 }
-.text-right { text-align: right; }
+.text-right {
+  text-align: right;
+}
 
 /* Delete confirm modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -8882,7 +9035,7 @@ textarea:focus-visible {
   padding: 28px 32px;
   max-width: 400px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
 .modal-box h3 {
   margin: 0 0 8px;
@@ -8908,7 +9061,9 @@ textarea:focus-visible {
   font-family: inherit;
   transition: background 0.15s;
 }
-.btn-danger:hover { background: #dc2626; }
+.btn-danger:hover {
+  background: #dc2626;
+}
 .btn-cancel {
   padding: 9px 20px;
   background: transparent;
@@ -8920,4 +9075,7 @@ textarea:focus-visible {
   color: var(--color-text-secondary, #64748b);
   transition: border-color 0.15s;
 }
-.btn-cancel:hover { border-color: var(--color-primary, #0ea5e9); color: var(--color-primary, #0ea5e9); }
+.btn-cancel:hover {
+  border-color: var(--color-primary, #0ea5e9);
+  color: var(--color-primary, #0ea5e9);
+}
