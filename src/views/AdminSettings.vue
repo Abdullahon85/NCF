@@ -220,7 +220,7 @@ async function saveAbout() {
     aboutSuccess.value = false;
     await settingsAdminAPI.updateAbout(about);
     aboutSuccess.value = true;
-    setTimeout(() => (aboutSuccess.value = false), 3000);
+    setTimeout(() => (aboutSuccess.value = false), 2000);
   } catch (e: any) {
     aboutError.value = e.response?.data?.detail || "Ошибка сохранения";
   } finally {
@@ -235,7 +235,7 @@ async function saveContact() {
     contactSuccess.value = false;
     await settingsAdminAPI.updateContact(contact);
     contactSuccess.value = true;
-    setTimeout(() => (contactSuccess.value = false), 3000);
+    setTimeout(() => (contactSuccess.value = false), 2000);
   } catch (e: any) {
     contactError.value = e.response?.data?.detail || "Ошибка сохранения";
   } finally {
@@ -250,7 +250,7 @@ async function saveSocial() {
     socialSuccess.value = false;
     await settingsAdminAPI.updateContact(social);
     socialSuccess.value = true;
-    setTimeout(() => (socialSuccess.value = false), 3000);
+    setTimeout(() => (socialSuccess.value = false), 2000);
   } catch (e: any) {
     socialError.value = e.response?.data?.detail || "Ошибка сохранения";
   } finally {

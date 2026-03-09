@@ -133,13 +133,23 @@ export interface CartItem {
   selectedOptions?: Record<string, any>;
 }
 
+export interface OrderItem {
+  product: number | null;
+  product_name: string;
+  product_sku: string;
+  price: number | null;
+  quantity: number;
+}
+
 export interface Order {
   id?: number;
-  items: { product: number; quantity: number; price?: number }[];
-  total: number;
-  shipping_address: any;
+  customer_name: string;
+  customer_phone: string;
+  customer_email?: string;
+  comment?: string;
   status?: string;
   created_at?: string;
+  items: OrderItem[];
 }
 
 export interface User {

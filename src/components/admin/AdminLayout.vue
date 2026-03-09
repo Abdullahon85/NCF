@@ -106,6 +106,7 @@ const authStore = useAuthStore();
 const sidebarCollapsed = ref(false);
 const showUserMenu = ref(false);
 const unreadMessages = ref(0);
+const newOrders = ref(0);
 const mobileMenuOpen = ref(false);
 
 const menuItems = computed(() => [
@@ -123,6 +124,12 @@ const menuItems = computed(() => [
     icon: "✉️",
     badge: unreadMessages.value || undefined,
   },
+  {
+    path: "/admin/orders",
+    label: "Заявки",
+    icon: "🛒",
+    badge: newOrders.value || undefined,
+  },
   { path: "/admin/settings", label: "Настройки", icon: "⚙️" },
 ]);
 
@@ -136,6 +143,7 @@ const pageTitles: Record<string, string> = {
   "/admin/banners": "Управление баннерами",
   "/admin/news": "Управление новостями",
   "/admin/messages": "Сообщения",
+  "/admin/orders": "Заявки",
   "/admin/settings": "Настройки сайта",
   "/admin/profile": "Профиль",
 };
@@ -190,6 +198,7 @@ async function loadStats() {
   try {
     const response = await statsAPI.getDashboard();
     unreadMessages.value = response.data.unread_messages || 0;
+    newOrders.value = response.data.new_orders_count || 0;
   } catch (e) {
     // Ignore
   }

@@ -297,7 +297,7 @@ async function saveProfile() {
   if (result.success) {
     setTimeout(() => {
       profileMessage.value = "";
-    }, 3000);
+    }, 2000);
   }
 }
 
@@ -335,7 +335,7 @@ async function changePassword() {
     passwordForm.confirmPassword = "";
     setTimeout(() => {
       passwordMessage.value = "";
-    }, 3000);
+    }, 2000);
   }
 }
 

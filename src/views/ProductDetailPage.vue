@@ -178,7 +178,7 @@
           </div>
 
           <!-- Action Buttons -->
-          <div class="action-buttons">
+          <!-- <div class="action-buttons">
             <button
               v-if="product.is_available"
               class="btn btn-primary btn-large"
@@ -217,7 +217,7 @@
               </svg>
               Связаться с нами
             </button>
-          </div>
+          </div> -->
         </div>
       </div>
 

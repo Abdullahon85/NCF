@@ -212,9 +212,10 @@ export const contactAPI = {
 };
 
 export const ordersAPI = {
-  create: (payload: Order) => api.post("/orders/", payload),
+  create: (payload: Order) => api.post<Order>("/orders/", payload),
   getById: (id: number) => api.get<Order>(`/orders/${id}/`),
-  list: (params?: Record<string, any>) => api.get("/orders/", { params }),
+  list: (params?: Record<string, any>) =>
+    api.get<{ results: Order[]; count: number }>("/orders/", { params }),
 };
 
 export const reviewsAPI = {

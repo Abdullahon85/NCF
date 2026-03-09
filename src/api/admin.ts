@@ -651,3 +651,28 @@ export const productsAdminAPI = {
 
 export default adminApi;
 export { tokenStorage };
+
+// ============ ORDERS ADMIN API ============
+export const ordersAdminAPI = {
+  getAll: (params?: {
+    status?: string;
+    search?: string;
+    page?: number;
+    page_size?: number;
+  }) => adminApi.get("/orders/", { params }),
+
+  getById: (id: number) => {
+    validateId(id, "order");
+    return adminApi.get(`/orders/${id}/`);
+  },
+
+  updateStatus: (id: number, status: string) => {
+    validateId(id, "order");
+    return adminApi.patch(`/orders/${id}/`, { status });
+  },
+
+  delete: (id: number) => {
+    validateId(id, "order");
+    return adminApi.delete(`/orders/${id}/`);
+  },
+};

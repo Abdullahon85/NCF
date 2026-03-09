@@ -42,9 +42,10 @@
           </form>
         </div>
 
-        <!-- Favorites & Compare icons -->
+        <!-- Favorites, Compare & Cart icons -->
         <div class="header-icons">
           <router-link
+
             to="/favorites"
             class="header-icon-btn"
             title="Избранное"
@@ -88,6 +89,30 @@
               compareCount
             }}</span>
           </router-link>
+          <router-link
+            to="/cart"
+            class="header-icon-btn"
+            title="Корзина"
+            @click="mobileMenuOpen = false"
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path
+                d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+              />
+            </svg>
+            <span v-if="cartCount > 0" class="header-icon-badge">{{
+              cartCount
+            }}</span>
+          </router-link>
         </div>
 
         <button
@@ -104,7 +129,10 @@
         <ul class="nav-menu" :class="{ active: mobileMenuOpen }">
           <!-- Search inside mobile menu -->
           <li class="mobile-search-item">
-            <form @submit.prevent="navigateToSearchResults" class="mobile-search-wrapper">
+            <form
+              @submit.prevent="navigateToSearchResults"
+              class="mobile-search-wrapper"
+            >
               <input
                 type="text"
                 v-model="searchQuery"
@@ -112,8 +140,22 @@
                 placeholder="Поиск по названию или артикулу..."
                 class="mobile-search-input"
               />
-              <button type="submit" class="mobile-search-btn" :disabled="searchQuery.trim().length < 1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <button
+                type="submit"
+                class="mobile-search-btn"
+                :disabled="searchQuery.trim().length < 1"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <circle cx="11" cy="11" r="8"></circle>
                   <path d="m21 21-4.35-4.35"></path>
                 </svg>
@@ -172,6 +214,7 @@ import { categoriesAPI } from "@/api";
 import type { Category } from "@/types";
 import { useFavoritesStore } from "@/stores/useFavoritesStore";
 import { useCompareStore } from "@/stores/useCompareStore";
+import { useCartStore } from "@/stores/useCartStore";
 
 const route = useRoute();
 const router = useRouter();
@@ -181,8 +224,10 @@ const categories = ref<Category[]>([]);
 
 const favStore = useFavoritesStore();
 const compareStore = useCompareStore();
+const cartStore = useCartStore();
 const favCount = computed(() => favStore.items.length);
 const compareCount = computed(() => compareStore.items.length);
+const cartCount = computed(() => cartStore.totalQty);
 
 // Search functionality
 const searchQuery = ref("");

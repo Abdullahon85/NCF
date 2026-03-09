@@ -181,18 +181,64 @@
         </p>
         <p v-else class="product-price text-muted">По запросу</p>
 
-        <button class="btn-view" @click.stop="goToProduct">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </button>
+        <div class="product-footer-actions">
+          <!-- Если в корзине: inline qty controls -->
+          <transition name="cart-qty-fade" mode="out-in">
+            <div v-if="inCart" class="card-qty-control" @click.stop key="qty">
+              <button
+                class="card-qty-btn"
+                @click.stop="decCartQty"
+                title="Уменьшить"
+              >
+                −
+              </button>
+              <span class="card-qty-value">{{ cartQty }}</span>
+              <button
+                class="card-qty-btn"
+                @click.stop="incCartQty"
+                title="Увеличить"
+              >
+                +
+              </button>
+            </div>
+            <!-- Если не в корзине: кнопка добавить -->
+            <button
+              v-else
+              key="add"
+              class="btn-cart"
+              title="В корзину"
+              @click.stop="cartStore.add(props.product, 1)"
+            >
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
+                <path
+                  d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+                />
+              </svg>
+            </button>
+          </transition>
+
+          <button class="btn-view" @click.stop="goToProduct">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -206,6 +252,7 @@ import type { Product } from "@/types";
 import { getImageUrl } from "@/api";
 import { useFavoritesStore } from "@/stores/useFavoritesStore";
 import { useCompareStore } from "@/stores/useCompareStore";
+import { useCartStore } from "@/stores/useCartStore";
 
 const props = defineProps({
   product: {
@@ -224,10 +271,17 @@ const copied = ref<"name" | "sku" | null>(null);
 
 const favStore = useFavoritesStore();
 const compareStore = useCompareStore();
+const cartStore = useCartStore();
 
 const isFav = computed(() => favStore.isFavorite(props.product.id));
 const isInCompare = computed(() =>
   compareStore.items.some((p) => p.id === props.product.id),
+);
+const inCart = computed(() => cartStore.isInCart(props.product.id));
+const cartQty = computed(
+  () =>
+    cartStore.items.find((i) => i.product.id === props.product.id)?.quantity ??
+    0,
 );
 
 const toggleFav = () => {
@@ -239,6 +293,18 @@ const toggleCompare = () => {
     compareStore.remove(props.product.id);
   } else if (!compareStore.isFull) {
     compareStore.add(props.product);
+  }
+};
+
+const incCartQty = () => {
+  cartStore.setQty(props.product.id, cartQty.value + 1);
+};
+
+const decCartQty = () => {
+  if (cartQty.value <= 1) {
+    cartStore.remove(props.product.id);
+  } else {
+    cartStore.setQty(props.product.id, cartQty.value - 1);
   }
 };
 
