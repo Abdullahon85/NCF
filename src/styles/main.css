@@ -7549,9 +7549,7 @@ textarea:focus-visible {
 
   /* Убираем bounce эффект */
   body {
-    position: fixed;
-    width: 100%;
-    overflow-y: scroll;
+    overscroll-behavior-y: none;
   }
 
   /* Safe area для iPhone с вырезом */
