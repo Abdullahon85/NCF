@@ -10,6 +10,7 @@
       </router-view>
     </main>
     <FooterComponent v-if="!isAdminRoute" />
+    <BottomNav />
 
     <!-- Scroll to Top Button -->
     <transition name="fade-up">
@@ -46,12 +47,15 @@ import {
 } from "vue";
 import { useRoute } from "vue-router";
 
-// Lazy load Header and Footer
+// Lazy load Header, Footer, and BottomNav
 const HeaderComponent = defineAsyncComponent(
-  () => import("@/components/HeaderComponent.vue")
+  () => import("@/components/HeaderComponent.vue"),
 );
 const FooterComponent = defineAsyncComponent(
-  () => import("@/components/FooterComponent.vue")
+  () => import("@/components/FooterComponent.vue"),
+);
+const BottomNav = defineAsyncComponent(
+  () => import("@/components/BottomNav.vue"),
 );
 
 const route = useRoute();

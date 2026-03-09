@@ -633,18 +633,4 @@ onMounted(loadItems);
   height: 18px;
 }
 
-@media (max-width: 768px) {
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .form-row .form-group:last-child {
-    width: 100%;
-  }
-
-  .table-image {
-    width: 80px;
-    height: 35px;
-  }
-}
 </style>

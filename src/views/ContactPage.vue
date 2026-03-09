@@ -268,23 +268,4 @@ onMounted(() => {
   transform: translateY(0);
 }
 
-@media (max-width: 767px) {
-  .contact-page {
-    padding: var(--space-6, 1.5rem) 0;
-  }
-
-  .contact-page h1 {
-    font-size: 1.75rem;
-  }
-
-  .contact-info-section,
-  .contact-form-section {
-    padding: var(--space-6, 1.5rem);
-  }
-
-  .contact-info-section h2,
-  .contact-form-section h2 {
-    font-size: 1.25rem;
-  }
-}
 </style>

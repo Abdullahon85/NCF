@@ -1319,9 +1319,4 @@ onMounted(async () => {
   margin-bottom: 16px;
 }
 
-@media (max-width: 600px) {
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

@@ -881,9 +881,4 @@ onMounted(() => {
   gap: 16px;
 }
 
-@media (max-width: 768px) {
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

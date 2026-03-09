@@ -175,15 +175,6 @@ onMounted(async () => {
   padding: 0 16px;
 }
 
-@media (max-width: 768px) {
-  .hero-banner {
-    margin-bottom: 24px;
-  }
-
-  .banner-container {
-    padding: 0 12px;
-  }
-}
 
 .category-skeleton {
   background: var(--gray-100);
