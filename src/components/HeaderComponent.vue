@@ -3,7 +3,7 @@
     <div class="container">
       <nav class="navbar">
         <router-link to="/" class="logo" @click="mobileMenuOpen = false">
-          <span>Future Stars</span>
+          <span></span>
         </router-link>
 
         <!-- Search Bar -->
@@ -275,7 +275,7 @@ onMounted(async () => {
     const res = await categoriesAPI.getAll(100);
     categories.value = res.data.results;
   } catch (e) {
-    console.error("Ошибка загрузки категорий:", e);
+    console.error("Ошибка загрузки каталога:", e);
   }
 });
 </script>

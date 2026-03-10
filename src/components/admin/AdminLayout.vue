@@ -112,7 +112,7 @@ const mobileMenuOpen = ref(false);
 const menuItems = computed(() => [
   { path: "/admin", label: "Dashboard", icon: "📊" },
   { path: "/admin/products", label: "Товары", icon: "📦" },
-  { path: "/admin/categories", label: "Категории", icon: "📁" },
+  { path: "/admin/categories", label: "Каталог", icon: "📁" },
   { path: "/admin/brands", label: "Бренды", icon: "🏷️" },
   { path: "/admin/tags", label: "Теги", icon: "#️⃣" },
   { path: "/admin/features", label: "Характеристики", icon: "📋" },
@@ -130,13 +130,15 @@ const menuItems = computed(() => [
     icon: "🛒",
     badge: newOrders.value || undefined,
   },
+  { path: "/admin/reviews", label: "Отзывы", icon: "⭐" },
+  { path: "/admin/questions", label: "Вопросы", icon: "❓" },
   { path: "/admin/settings", label: "Настройки", icon: "⚙️" },
 ]);
 
 const pageTitles: Record<string, string> = {
   "/admin": "Dashboard",
   "/admin/products": "Управление товарами",
-  "/admin/categories": "Управление категориями",
+  "/admin/categories": "Управление каталогом",
   "/admin/brands": "Управление брендами",
   "/admin/tags": "Управление тегами",
   "/admin/features": "Управление характеристиками",
@@ -144,6 +146,8 @@ const pageTitles: Record<string, string> = {
   "/admin/news": "Управление новостями",
   "/admin/messages": "Сообщения",
   "/admin/orders": "Заявки",
+  "/admin/reviews": "Управление отзывами",
+  "/admin/questions": "Управление вопросами",
   "/admin/settings": "Настройки сайта",
   "/admin/profile": "Профиль",
 };

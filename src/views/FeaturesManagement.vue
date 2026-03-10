@@ -34,7 +34,7 @@
         @change="onCategoryFilterChange"
         class="filter-select"
       >
-        <option value="">Все категории</option>
+        <option value="">Весь каталог</option>
         <option v-for="cat in categories" :key="cat.id" :value="cat.id">
           {{ cat.name }}
         </option>
@@ -70,7 +70,7 @@
           <tr>
             <th>ID</th>
             <th>Название</th>
-            <th>Категория</th>
+            <th>Каталог</th>
             <th>Привязанные значения</th>
             <th>Действия</th>
           </tr>
@@ -79,7 +79,7 @@
           <tr v-for="item in features" :key="item.id">
             <td data-label="ID">{{ item.id }}</td>
             <td data-label="Название" class="name-cell">{{ item.name }}</td>
-            <td data-label="Категория">{{ item.category_name || "—" }}</td>
+            <td data-label="Каталог">{{ item.category_name || "—" }}</td>
             <td data-label="Значения">
               <div class="values-preview">
                 <span
@@ -154,7 +154,7 @@
             <th>ID</th>
             <th>Значение</th>
             <th>Характеристика</th>
-            <th>Категория</th>
+            <th>Каталог</th>
             <th>Действия</th>
           </tr>
         </thead>
@@ -184,7 +184,7 @@
                 <span v-else class="no-values">Не привязано</span>
               </div>
             </td>
-            <td data-label="Категория">{{ item.category_name || "—" }}</td>
+            <td data-label="Каталог">{{ item.category_name || "—" }}</td>
             <td data-label="Действия">
               <div class="actions">
                 <button @click="editValue(item)" class="btn-icon">✏️</button>
@@ -249,7 +249,7 @@
               <input v-model="featureForm.name" type="text" required />
             </div>
             <div class="form-group">
-              <label>Категория *</label>
+              <label>Каталог *</label>
               <select
                 v-model="featureForm.category"
                 @change="onFeatureCategoryChange"
@@ -299,7 +299,7 @@
               <p v-else class="hint-text">Нет привязанных значений</p>
             </div>
 
-            <!-- Выбор из доступных значений категории -->
+            <!-- Выбор из доступных значений каталога -->
             <div class="available-values">
               <div class="values-header">
                 <label
@@ -369,7 +369,7 @@
           </div>
 
           <div v-else class="hint-message">
-            Сначала выберите категорию для привязки значений
+            Сначала выберите каталог для привязки значений
           </div>
 
           <div v-if="error" class="error-msg">{{ error }}</div>
@@ -406,7 +406,7 @@
             <input v-model="valueForm.value" type="text" required />
           </div>
           <div class="form-group">
-            <label>Категория *</label>
+            <label>Каталог *</label>
             <select
               v-model="valueForm.category"
               @change="onValueCategoryChange"
@@ -638,7 +638,7 @@ async function loadCategories() {
   }
 }
 
-// Загрузка значений категории для формы характеристики
+// Загрузка значений каталога для формы характеристики
 async function loadCategoryValues(categoryId: number) {
   try {
     const res = await featureValuesAdminAPI.getAll({
@@ -776,7 +776,7 @@ async function quickAddValues() {
       }
     } else {
       try {
-        // Создаём значение с привязкой к категории (привязка к feature происходит при сохранении характеристики)
+        // Создаём значение с привязкой к каталогу (привязка к feature происходит при сохранении характеристики)
         const res = await featureValuesAdminAPI.create({
           value: val,
           category: featureForm.category,
@@ -856,7 +856,7 @@ async function editValue(item: any) {
 }
 
 function onValueCategoryChange() {
-  // Категория изменена
+  // Каталог изменен, можно добавить логику если нужно (например, предупреждение о том, что привязки будут потеряны при сохранении)
 }
 
 async function saveValue() {

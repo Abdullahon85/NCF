@@ -257,60 +257,12 @@
 }
 
 /* ===========================================
-   2. BANNER SLIDER — Full width on mobile
+   2. BANNER SLIDER — Hidden on mobile
    =========================================== */
 @media (max-width: 768px) {
+  /* Banner slider completely hidden on mobile — takes too much space */
   .banner-slider {
-    border-radius: 0;
-    margin: 0 -16px;
-    width: calc(100% + 32px);
-  }
-
-  .banner-slider .slider-container {
-    aspect-ratio: 16 / 9;
-  }
-
-  .banner-slider .slide-content {
-    padding: 14px 16px;
-    max-width: 100%;
-  }
-
-  .banner-slider .slide-title {
-    font-size: 1.1rem;
-    margin-bottom: 4px;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
-  }
-
-  .banner-slider .slide-description {
-    font-size: 0.8rem;
-    margin-bottom: 10px;
-    -webkit-line-clamp: 2;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  }
-
-  .banner-slider .slide-link {
-    padding: 8px 18px;
-    font-size: 0.8rem;
-    border-radius: 8px;
-  }
-
-  .banner-slider .nav-button {
-    width: 32px;
-    height: 32px;
-    opacity: 0.7;
-  }
-
-  .banner-slider .nav-prev {
-    left: 6px;
-  }
-
-  .banner-slider .nav-next {
-    right: 6px;
-  }
-
-  .banner-slider .nav-button svg {
-    width: 16px;
-    height: 16px;
+    display: none !important;
   }
 
   .banner-slider .dots-container {
@@ -329,13 +281,69 @@
   }
 }
 
-@media (max-width: 390px) {
-  .banner-slider .slider-container {
-    aspect-ratio: 4 / 3;
+/* Banner 390px block is also irrelevant since banner is hidden, skip it */
+
+/* ===========================================
+   2b. BRANDS SLIDER — native touch scroll on mobile
+   =========================================== */
+@media (max-width: 768px) {
+  /* Hide arrows — finger swipe is enough */
+  .nav-btn.left,
+  .nav-btn.right {
+    display: none !important;
   }
 
-  .banner-slider .banner-skeleton {
-    aspect-ratio: 4 / 3;
+  /* Wrapper: remove the JS-transform clipping, allow native scroll */
+  .slider-wrapper {
+    overflow-x: auto !important;
+    overflow-y: visible;
+    padding: 4px 16px;
+    /* Hide scrollbar visually but keep it functional */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* Remove the fixed padding that was for arrow buttons */
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .slider-wrapper::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Track: disable JS transform, lay items out in a natural row */
+  .clients-track {
+    /* Override the JS-injected transform — pointer events handle scrolling now */
+    transform: none !important;
+    transition: none !important;
+    width: max-content !important;
+    /* Scroll snap for crisp card-by-card feel */
+    scroll-snap-type: x mandatory;
+    display: flex;
+    gap: 0;
+  }
+
+  /* Each logo card: fixed width, snap point */
+  .client-logo {
+    flex: 0 0 120px !important;
+    min-height: 80px;
+    margin: 0 6px;
+    scroll-snap-align: start;
+    border-radius: 12px;
+    padding: 12px;
+    /* Disable hover effects on touch */
+    transform: none !important;
+  }
+
+  .client-logo img {
+    max-height: 48px;
+    opacity: 0.85;
+    filter: grayscale(30%);
+  }
+
+  .clients-section {
+    /* Stretch full width edge-to-edge */
+    margin: 0 -16px;
+    width: calc(100% + 32px);
+    overflow: hidden;
   }
 }
 
@@ -466,30 +474,44 @@
     min-width: 22px;
   }
 
-  /* Action buttons (fav/compare) */
+  /* Action buttons (fav/compare) — always visible on touch, horizontal row */
   .pc-actions {
     top: 6px;
     right: 6px;
-    gap: 4px;
+    gap: 5px;
+    flex-direction: row;
+    /* Override desktop opacity:0 / translateX — always show on touch */
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none;
   }
 
   .card-action-btn {
     width: 30px;
     height: 30px;
     padding: 0;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(4px);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    color: var(--gray-500);
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
   }
 
   .card-action-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
   }
 
   .card-action-btn.active {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--primary, #0ea5e9);
+    color: #fff;
+    border-color: var(--primary, #0ea5e9);
+    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.35);
   }
 
   /* Copy buttons */
@@ -619,6 +641,62 @@
 }
 
 /* ===========================================
+   4b. PRODUCT CARD — Staggered entrance animation
+   =========================================== */
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .products-grid .product-card {
+    animation: cardEntrance 0.32s ease both;
+  }
+
+  /* Staggered delays for first 12 cards */
+  .products-grid .product-card:nth-child(1) {
+    animation-delay: 0.03s;
+  }
+  .products-grid .product-card:nth-child(2) {
+    animation-delay: 0.07s;
+  }
+  .products-grid .product-card:nth-child(3) {
+    animation-delay: 0.11s;
+  }
+  .products-grid .product-card:nth-child(4) {
+    animation-delay: 0.15s;
+  }
+  .products-grid .product-card:nth-child(5) {
+    animation-delay: 0.19s;
+  }
+  .products-grid .product-card:nth-child(6) {
+    animation-delay: 0.23s;
+  }
+  .products-grid .product-card:nth-child(7) {
+    animation-delay: 0.27s;
+  }
+  .products-grid .product-card:nth-child(8) {
+    animation-delay: 0.31s;
+  }
+  .products-grid .product-card:nth-child(n + 9) {
+    animation-delay: 0.34s;
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    .products-grid .product-card {
+      animation: none;
+    }
+  }
+}
+
+/* ===========================================
    5. CATALOG & CATEGORY PAGE — Layout
    =========================================== */
 @media (max-width: 768px) {
@@ -668,20 +746,22 @@
     justify-content: center;
     gap: 8px;
     width: 100%;
-    padding: 12px;
-    background: var(--white);
-    border: 1px solid var(--gray-200);
+    padding: 12px 16px;
+    background: var(--primary, #0ea5e9);
+    border: none;
     border-radius: 12px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--gray-800);
+    color: #fff;
     cursor: pointer;
     margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
     transition: all 0.2s ease;
   }
 
   .mobile-filter-btn:active {
-    background: var(--gray-50);
+    background: color-mix(in srgb, var(--primary, #0ea5e9) 85%, #000);
+    transform: scale(0.98);
   }
 
   /* Overlay */
@@ -890,25 +970,7 @@
     background: var(--white);
   }
 
-  /* Product layout: single column */
-  .product-layout {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 0;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  .product-detail-layout {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  /* Gallery full width */
-  .product-gallery-section {
-    position: relative;
-  }
-
+  /* Gallery components (not scoped) */
   .image-gallery,
   .product-gallery {
     width: 100%;
@@ -944,104 +1006,6 @@
     display: none;
   }
 
-  /* Availability badge */
-  .availability-badge {
-    padding: 4px 10px;
-    font-size: 12px;
-    top: 8px;
-    right: 8px;
-  }
-
-  /* Product info */
-  .product-info-section {
-    gap: 12px;
-  }
-
-  .product-header {
-    padding-bottom: 12px;
-  }
-
-  .product-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    line-height: 1.3;
-    margin-bottom: 8px;
-  }
-
-  .product-meta-row {
-    gap: 8px;
-    flex-direction: column;
-  }
-
-  .brand-info,
-  .sku-info {
-    font-size: 13px;
-  }
-
-  .meta-label {
-    font-size: 12px;
-  }
-
-  .sku-value code {
-    font-size: 12px;
-    padding: 2px 6px;
-  }
-
-  /* Price section */
-  .price-section {
-    padding: 12px 14px;
-    border-radius: 12px;
-  }
-
-  .price-value {
-    font-size: 1.5rem;
-  }
-
-  .price-label {
-    font-size: 12px;
-  }
-
-  .price-on-request {
-    font-size: 15px;
-  }
-
-  .product-detail-info {
-    padding: 0;
-  }
-
-  .product-detail-info h1 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    line-height: 1.3;
-  }
-
-  .detail-price {
-    font-size: 1.4rem;
-    font-weight: 800;
-  }
-
-  /* Tabs */
-  .tabs,
-  .product-tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    white-space: nowrap;
-    gap: 0;
-  }
-
-  .tabs::-webkit-scrollbar,
-  .product-tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .tab,
-  .tab-btn {
-    padding: 10px 16px;
-    font-size: 13px;
-    white-space: nowrap;
-  }
-
   /* Fullscreen gallery */
   .fullscreen-overlay {
     padding: 0;
@@ -1073,32 +1037,7 @@
     right: 8px;
   }
 
-  /* Sticky Add to Cart on product detail */
-  .product-detail-actions,
-  .add-to-cart-section {
-    position: fixed;
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-    left: 0;
-    right: 0;
-    z-index: 99;
-    background: var(--white);
-    padding: 10px 16px;
-    border-top: 1px solid var(--gray-200);
-    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
-    display: flex;
-    gap: 8px;
-  }
-
-  .product-detail-actions .btn,
-  .add-to-cart-section .btn {
-    flex: 1;
-    min-height: 46px;
-    font-size: 14px;
-    border-radius: 10px;
-    font-weight: 600;
-  }
-
-  /* Features table */
+  /* Features table (global) */
   .features-table,
   .product-features {
     font-size: 13px;
@@ -1113,7 +1052,6 @@
     border-bottom: 1px solid var(--gray-100);
   }
 
-  /* Feature item grid */
   .feature-item {
     grid-template-columns: 1fr;
     gap: 4px;
@@ -1153,18 +1091,9 @@
     height: 240px;
   }
 
-  .product-detail-info h1,
-  .product-title {
-    font-size: 1.1rem;
-  }
-
   .thumbnail {
     width: 46px;
     height: 46px;
-  }
-
-  .price-value {
-    font-size: 1.3rem;
   }
 }
 
@@ -1346,7 +1275,7 @@
    =========================================== */
 @media (max-width: 768px) {
   .footer {
-    padding: 24px 0 calc(80px + env(safe-area-inset-bottom, 0px));
+    padding: 24px 0 8px;
   }
 
   .footer-content {

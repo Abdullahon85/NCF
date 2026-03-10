@@ -36,7 +36,7 @@ const menuItems = [
   { id: "products", label: "Товары", path: "/admin/products", icon: "📦" },
   {
     id: "categories",
-    label: "Категории",
+    label: "Каталог",
     path: "/admin/categories",
     icon: "📂",
   },

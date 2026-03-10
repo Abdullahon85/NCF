@@ -36,13 +36,13 @@
 
           <div class="form-row-2cols">
             <div class="form-group">
-              <label>Категория *</label>
+              <label>Каталог *</label>
               <select
                 v-model.number="formData.category"
                 required
                 class="form-input"
               >
-                <option value="">Выберите категорию</option>
+                <option value="">Выберите каталог</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                   {{ cat.name }}
                 </option>

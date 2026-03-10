@@ -263,7 +263,7 @@ const categorySlug = computed(
 // ============================================
 
 /**
- * Загрузка брендов для текущей категории
+ * Загрузка брендов для текущего каталога
  */
 const loadBrands = async (): Promise<void> => {
   if (!categorySlug.value) return;
@@ -277,7 +277,7 @@ const loadBrands = async (): Promise<void> => {
 };
 
 /**
- * Загрузка информации о категории
+ * Загрузка информации о каталоге
  */
 const loadCategoryInfo = async (): Promise<void> => {
   if (!categorySlug.value) return;
@@ -285,13 +285,13 @@ const loadCategoryInfo = async (): Promise<void> => {
     const response = await categoriesAPI.getBySlug(categorySlug.value);
     categoryName.value = response.data.name || "";
   } catch (err) {
-    console.error("Ошибка загрузки категории:", err);
+    console.error("Ошибка загрузки каталога:", err);
     categoryName.value = "";
   }
 };
 
 /**
- * Загрузка тегов для текущей категории (с учётом текущего фильтра цены)
+ * Загрузка тегов для текущего каталога (с учётом текущего фильтра цены)
  */
 const loadTags = async (): Promise<void> => {
   if (!categorySlug.value) return;
@@ -339,7 +339,7 @@ const loadTags = async (): Promise<void> => {
 };
 
 /**
- * Загрузка диапазона цен для текущей категории
+ * Загрузка диапазона цен для текущего каталога
  */
 const loadPriceRange = async (): Promise<void> => {
   if (!categorySlug.value) return;
@@ -446,7 +446,7 @@ const loadProducts = async (): Promise<void> => {
     if (err.response?.status === 429) {
       error.value = "Слишком много запросов. Пожалуйста, подождите немного...";
     } else if (err.response?.status === 404) {
-      error.value = "Категория не найдена";
+      error.value = "Каталог не найден";
     } else if (err.response?.status >= 500) {
       error.value = "Ошибка сервера. Попробуйте обновить страницу";
     } else if (!navigator.onLine) {
@@ -613,7 +613,7 @@ onMounted(async () => {
 });
 
 /**
- * Отслеживание изменения категории
+ * Отслеживание изменения каталога
  */
 watch(
   () => route.params.categorySlug,
@@ -637,7 +637,7 @@ watch(
     filters.onlyAvailable = false;
     pagination.page = 1;
 
-    // Загружаем данные для новой категории
+    // Загружаем данные для нового каталога
     await Promise.all([
       loadCategoryInfo(),
       loadBrands(),

@@ -94,6 +94,10 @@ const handleClick = (_tab: (typeof tabs)[0]) => {
     border-top: 1px solid rgba(0, 0, 0, 0.06);
     box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.04);
     padding-bottom: env(safe-area-inset-bottom, 0);
+    /* iOS Safari GPU layer — prevents nav from disappearing on scroll */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    will-change: transform;
   }
 
   .bottom-nav-item {

@@ -11,6 +11,7 @@ import type {
   ProductFilters,
   Order,
   Review,
+  ProductQuestion,
   Tag,
   Brand,
   BrandFilters,
@@ -219,13 +220,33 @@ export const ordersAPI = {
 };
 
 export const reviewsAPI = {
-  listByProduct: (productId: number | string, params?: any) =>
-    api.get<PaginatedResponse<Review>>(`/products/${productId}/reviews/`, {
+  listByProduct: (productSlug: string, params?: any) =>
+    api.get<PaginatedResponse<Review>>(`/products/${productSlug}/reviews/`, {
       params,
     }),
-  create: (productId: number, payload: Partial<Review>) =>
-    api.post(`/products/${productId}/reviews/`, payload),
-  get: (id: number) => api.get(`/reviews/${id}/`),
+  create: (
+    productSlug: string,
+    payload: { author_name: string; rating: number; text: string },
+  ) => api.post<Review>(`/products/${productSlug}/reviews/`, payload),
+};
+
+export const questionsAPI = {
+  listByProduct: (productSlug: string, params?: any) =>
+    api.get<PaginatedResponse<ProductQuestion>>(
+      `/products/${productSlug}/questions/`,
+      {
+        params,
+      },
+    ),
+  create: (
+    productSlug: string,
+    payload: { author_name: string; text: string },
+  ) =>
+    api.post<ProductQuestion>(`/products/${productSlug}/questions/`, payload),
+};
+
+export const similarProductsAPI = {
+  get: (slug: string) => api.get<Product[]>(`/products/${slug}/similar/`),
 };
 
 export const tagsAPI = {

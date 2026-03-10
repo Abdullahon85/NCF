@@ -17,7 +17,7 @@
         <div class="stat-icon">📁</div>
         <div class="stat-content">
           <div class="stat-value">{{ stats.categories_count }}</div>
-          <div class="stat-label">Категорий</div>
+          <div class="stat-label">Каталог(а)ов</div>
         </div>
         <router-link to="/admin/categories" class="stat-link"
           >Управление →</router-link
@@ -76,7 +76,7 @@
         </router-link>
         <router-link to="/admin/categories" class="action-btn">
           <span class="action-icon">📁</span>
-          <span>Новая категория</span>
+          <span>Новый каталог</span>
         </router-link>
         <router-link to="/admin/news" class="action-btn">
           <span class="action-icon">📝</span>

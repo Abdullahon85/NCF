@@ -49,7 +49,7 @@
               <span v-else class="no-image">Нет фото</span>
             </td>
             <td data-label="Заголовок" class="name-cell">
-              <strong>{{ item.title }}</strong>
+              <strong>{{ item.title || '—' }}</strong>
               <small v-if="item.description" class="description-preview">
                 {{ item.description.slice(0, 50)
                 }}{{ item.description.length > 50 ? "..." : "" }}
@@ -129,8 +129,8 @@
         <form @submit.prevent="saveItem" class="modal-body">
           <div class="form-row">
             <div class="form-group">
-              <label>Заголовок *</label>
-              <input v-model="form.title" type="text" required />
+              <label>Заголовок</label>
+              <input v-model="form.title" type="text" placeholder="Необязательно" />
             </div>
             <div class="form-group">
               <label>Порядок</label>
@@ -379,10 +379,6 @@ function removeImage() {
 }
 
 async function saveItem() {
-  if (!form.value.title.trim()) {
-    error.value = "Заголовок обязателен";
-    return;
-  }
 
   saving.value = true;
   error.value = "";

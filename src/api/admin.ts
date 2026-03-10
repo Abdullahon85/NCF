@@ -676,3 +676,52 @@ export const ordersAdminAPI = {
     return adminApi.delete(`/orders/${id}/`);
   },
 };
+
+// ============ REVIEWS ADMIN API ============
+export const reviewsAdminAPI = {
+  getAll: (params?: {
+    search?: string;
+    product?: number;
+    rating?: number;
+    is_published?: string;
+  }) => adminApi.get("/admin/reviews/", { params }),
+
+  getById: (id: number) => {
+    validateId(id, "review");
+    return adminApi.get(`/admin/reviews/${id}/`);
+  },
+
+  update: (id: number, data: any) => {
+    validateId(id, "review");
+    return adminApi.patch(`/admin/reviews/${id}/`, data);
+  },
+
+  delete: (id: number) => {
+    validateId(id, "review");
+    return adminApi.delete(`/admin/reviews/${id}/`);
+  },
+};
+
+// ============ QUESTIONS ADMIN API ============
+export const questionsAdminAPI = {
+  getAll: (params?: {
+    search?: string;
+    product?: number;
+    is_published?: string;
+  }) => adminApi.get("/admin/questions/", { params }),
+
+  getById: (id: number) => {
+    validateId(id, "question");
+    return adminApi.get(`/admin/questions/${id}/`);
+  },
+
+  update: (id: number, data: any) => {
+    validateId(id, "question");
+    return adminApi.patch(`/admin/questions/${id}/`, data);
+  },
+
+  delete: (id: number) => {
+    validateId(id, "question");
+    return adminApi.delete(`/admin/questions/${id}/`);
+  },
+};

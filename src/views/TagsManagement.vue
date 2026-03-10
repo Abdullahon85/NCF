@@ -34,7 +34,7 @@
         @change="loadItems"
         class="filter-select"
       >
-        <option value="">Все категории</option>
+        <option value="">Весь каталог</option>
         <option v-for="cat in categories" :key="cat.id" :value="cat.id">
           {{ cat.name }}
         </option>
@@ -48,7 +48,7 @@
           <tr>
             <th>ID</th>
             <th>Название группы</th>
-            <th>Категория</th>
+            <th>Каталог</th>
             <th>Теги</th>
             <th>Действия</th>
           </tr>
@@ -57,7 +57,7 @@
           <tr v-for="item in tagNames" :key="item.id">
             <td data-label="ID">{{ item.id }}</td>
             <td data-label="Группа" class="name-cell">{{ item.name }}</td>
-            <td data-label="Категория">{{ item.category_name || "—" }}</td>
+            <td data-label="Каталог">{{ item.category_name || "—" }}</td>
             <td data-label="Теги">
               <span class="tags-count">{{ item.tags_count || 0 }} тегов</span>
               <div v-if="item.tags && item.tags.length" class="tags-preview">
@@ -101,7 +101,7 @@
             <th>Название</th>
             <th>Slug</th>
             <th>Группа</th>
-            <th>Категория</th>
+            <th>Каталог</th>
             <th>Действия</th>
           </tr>
         </thead>
@@ -111,7 +111,7 @@
             <td data-label="Название" class="name-cell">{{ item.name }}</td>
             <td data-label="Slug" class="slug-cell">{{ item.slug }}</td>
             <td data-label="Группа">{{ item.tag_name_display || "—" }}</td>
-            <td data-label="Категория">{{ item.category_name || "—" }}</td>
+            <td data-label="Каталог">{{ item.category_name || "—" }}</td>
             <td data-label="Действия">
               <div class="actions">
                 <button @click="editTag(item)" class="btn-icon">✏️</button>
@@ -148,7 +148,7 @@
               <input v-model="tagNameForm.name" type="text" required />
             </div>
             <div class="form-group">
-              <label>Категория</label>
+              <label>Каталог</label>
               <select v-model="tagNameForm.category">
                 <option :value="null">— Не выбрано —</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">
@@ -285,7 +285,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Категория</label>
+            <label>Каталог</label>
             <select v-model="tagForm.category">
               <option :value="null">— Не выбрано —</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">

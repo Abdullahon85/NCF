@@ -22,7 +22,7 @@
         @change="applyFilters"
         class="filter-select"
       >
-        <option value="">Все категории</option>
+        <option value="">Весь каталог</option>
         <option v-for="cat in categories" :key="cat.id" :value="cat.id">
           {{ cat.name }}
         </option>
@@ -59,7 +59,7 @@
             <th style="width: 70px">Фото</th>
             <th>Название</th>
             <th>SKU</th>
-            <th>Категория</th>
+            <th>Каталог</th>
             <th>Бренд</th>
             <th>Цена</th>
             <th>Статус</th>
@@ -80,7 +80,7 @@
             </td>
             <td data-label="Название" class="name-cell">{{ product.name }}</td>
             <td data-label="SKU">{{ product.internal_sku || "—" }}</td>
-            <td data-label="Категория">{{ product.category_name || "—" }}</td>
+            <td data-label="Каталог">{{ product.category_name || "—" }}</td>
             <td data-label="Бренд">{{ product.brand_name || "—" }}</td>
             <td data-label="Цена">{{ formatPrice(product.price) }}</td>
             <td data-label="Статус">
@@ -198,7 +198,7 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label>Категория *</label>
+                <label>Каталог *</label>
                 <select
                   v-model="form.category"
                   required
@@ -308,7 +308,7 @@
             <legend>Характеристики товаров</legend>
 
             <div v-if="!form.category" class="hint-message">
-              Сначала выберите категорию для отображения характеристик
+              Сначала выберите каталог для отображения характеристик
             </div>
 
             <div v-else>
@@ -386,7 +386,7 @@
             <legend>Группы тегов товара</legend>
 
             <div v-if="!form.category" class="hint-message">
-              Сначала выберите категорию для отображения тегов
+              Сначала выберите каталог для отображения тегов
             </div>
 
             <table v-else class="inline-table">

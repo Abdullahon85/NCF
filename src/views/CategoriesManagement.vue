@@ -2,9 +2,9 @@
   <div class="management-page">
     <!-- Header -->
     <div class="page-header">
-      <h1>📁 Управление категориями</h1>
+      <h1>📁 Управление каталогом</h1>
       <button @click="openCreateModal" class="btn btn-primary">
-        ➕ Добавить категорию
+        ➕ Добавить каталог
       </button>
     </div>
 
@@ -18,7 +18,7 @@
         @input="debouncedSearch"
       />
       <select v-model="parentFilter" @change="loadItems" class="filter-select">
-        <option value="">Все категории</option>
+        <option value="">Весь каталог</option>
         <option value="null">Только корневые</option>
         <option v-for="cat in allCategories" :key="cat.id" :value="cat.id">
           {{ cat.name }}
@@ -73,7 +73,7 @@
             </td>
           </tr>
           <tr v-if="items.length === 0">
-            <td colspan="8" class="empty">Категории не найдены</td>
+            <td colspan="8" class="empty">Каталог не найден</td>
           </tr>
         </tbody>
       </table>
@@ -84,7 +84,7 @@
       <div class="modal">
         <div class="modal-header">
           <h2>
-            {{ editingItem ? "Редактировать категорию" : "Новая категория" }}
+            {{ editingItem ? "Редактировать каталог" : "Новый каталог" }}
           </h2>
           <button @click="closeModal" class="close-btn">✕</button>
         </div>
@@ -103,9 +103,9 @@
             <input v-model="form.slug" type="text" required />
           </div>
           <div class="form-group">
-            <label>Родительская категория</label>
+            <label>Родительский каталог</label>
             <select v-model="form.parent">
-              <option :value="null">— Нет (корневая) —</option>
+              <option :value="null">— Нет (корневой) —</option>
               <option
                 v-for="cat in availableParents"
                 :key="cat.id"
@@ -122,7 +122,7 @@
 
           <!-- Image Upload Section -->
           <div class="form-group">
-            <label>Изображение категории</label>
+            <label>Изображение каталога</label>
             <div class="image-upload-container">
               <div
                 v-if="imagePreview || editingItem?.image"
@@ -179,7 +179,7 @@
         </div>
         <div class="modal-body">
           <p>
-            Вы уверены, что хотите удалить категорию
+            Вы уверены, что хотите удалить каталог
             <strong>{{ deletingItem?.name }}</strong
             >?
           </p>

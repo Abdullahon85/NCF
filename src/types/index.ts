@@ -162,12 +162,25 @@ export interface User {
 
 export interface Review {
   id?: number;
-  user?: User | number;
   product: number;
+  author_name: string;
   rating: number; // 1-5
-  title?: string;
-  body?: string;
+  text: string;
   created_at?: string;
+  is_published?: boolean;
+  admin_reply?: string;
+  admin_reply_date?: string;
+}
+
+export interface ProductQuestion {
+  id?: number;
+  product: number;
+  author_name: string;
+  text: string;
+  created_at?: string;
+  is_published?: boolean;
+  admin_reply?: string;
+  admin_reply_date?: string;
 }
 export interface Tag {
   id: number;

@@ -53,8 +53,12 @@ const autoplaySpeed = 3000;
 let interval: any = null;
 let isTransitioning = false;
 
+// On mobile we use native CSS scroll — JS transform must be disabled
+const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
+
 // Стиль смещения - используем calc для точного позиционирования
 const trackStyle = computed(() => {
+  if (isMobile()) return {}; // let CSS handle it
   const itemWidth = `calc((100% / 6))`;
   return {
     transform: `translateX(calc(-${current.value} * ${itemWidth}))`,
@@ -97,6 +101,7 @@ function prev() {
 
 function startAutoplay() {
   if (props.brands.length === 0) return;
+  if (isMobile()) return; // native scroll on mobile — no JS autoplay needed
   interval = setInterval(next, autoplaySpeed);
 }
 
