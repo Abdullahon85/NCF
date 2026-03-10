@@ -114,7 +114,7 @@ const cache = {
     try {
       sessionStorage.setItem(
         key,
-        JSON.stringify({ data, expiry: Date.now() + ttl })
+        JSON.stringify({ data, expiry: Date.now() + ttl }),
       );
     } catch {}
   },

@@ -621,4 +621,50 @@ onMounted(async () => {
 /* Убрали ::after для запятых - значения теперь через пробел */
 
 /* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .product-tabs-layout {
+    margin-top: 20px;
+    border-radius: 0;
+    box-shadow: none;
+    border-top: 1px solid #e9ecef;
+  }
+
+  .tabs-navigation {
+    gap: 0;
+  }
+
+  .tab-button {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  .tabs-content {
+    padding: 16px;
+    min-height: 150px;
+  }
+
+  .description-content {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .characteristic-name {
+    padding: 10px 12px;
+    font-size: 13px;
+    width: 40%;
+  }
+
+  .characteristic-value {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .empty-state {
+    padding: 30px 16px;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+  }
+}
 </style>

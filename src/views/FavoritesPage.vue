@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="favorites-page container">
     <nav class="breadcrumb">
       <router-link to="/">Главная</router-link>
       <span class="separator">›</span>

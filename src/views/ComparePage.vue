@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="compare-page container">
     <nav class="breadcrumb">
       <router-link to="/">Главная</router-link>
       <span class="separator">›</span>
