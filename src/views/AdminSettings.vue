@@ -248,7 +248,7 @@ async function saveSocial() {
     savingSocial.value = true;
     socialError.value = "";
     socialSuccess.value = false;
-    await settingsAdminAPI.updateContact(social);
+    await settingsAdminAPI.patchContact(social);
     socialSuccess.value = true;
     setTimeout(() => (socialSuccess.value = false), 2000);
   } catch (e: any) {

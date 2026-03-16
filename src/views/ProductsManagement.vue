@@ -727,23 +727,13 @@ async function loadBrands() {
 // Load features/tags by category (like Django filter_features.js)
 async function loadCategoryData(categoryId: number) {
   try {
-    console.log("Loading category data for id:", categoryId);
     const response = await categoryDataAPI.getByCategory(categoryId);
     const data = response.data;
-
-    console.log("Category data response:", data);
-    console.log("Features:", data.features);
-    console.log("First feature:", data.features?.[0]);
 
     categoryFeatures.value = data.features || [];
     categoryFeatureValues.value = data.feature_values || [];
     categoryTags.value = data.tags || [];
     categoryTagNames.value = data.tag_names || [];
-
-    console.log("Category features loaded:", categoryFeatures.value);
-    if (categoryFeatures.value.length > 0) {
-      console.log("First feature values:", categoryFeatures.value[0].values);
-    }
   } catch (e) {
     console.error("Failed to load category data:", e);
     categoryFeatures.value = [];
@@ -957,13 +947,9 @@ function getValuesForFeature(featureId: number | null) {
   if (!featureId) return [];
   // Find the feature and return its values
   const feature = categoryFeatures.value.find((f: any) => f.id === featureId);
-  console.log("Getting values for feature id:", featureId, "feature:", feature);
   if (feature && feature.values && Array.isArray(feature.values)) {
-    console.log("Found values in feature.values:", feature.values);
     return feature.values;
   }
-  // Fallback to searching in categoryFeatureValues (for cases where feature doesn't have values)
-  console.log("Fallback: searching in categoryFeatureValues");
   return categoryFeatureValues.value.filter(
     (fv: any) => fv.feature_id === featureId,
   );

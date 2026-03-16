@@ -70,7 +70,7 @@
     </div>
 
     <!-- Change Password -->
-    <!-- <div class="card">
+    <div class="card">
       <div class="card-header">
         <h2>🔐 Смена пароля</h2>
       </div>
@@ -138,7 +138,6 @@
             </div>
           </div>
 
-          
           <div v-if="passwordForm.newPassword" class="password-strength">
             <div class="strength-label">Надежность пароля:</div>
             <div class="strength-bar">
@@ -171,7 +170,7 @@
           </div>
         </form>
       </div>
-    </div> -->
+    </div>
 
     <!-- Account Info -->
     <div class="card">
@@ -256,7 +255,7 @@ watch(
       profileForm.last_name = user.last_name || "";
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Password strength
@@ -320,7 +319,7 @@ async function changePassword() {
 
   const result = await authStore.changePassword(
     passwordForm.oldPassword,
-    passwordForm.newPassword
+    passwordForm.newPassword,
   );
 
   changingPassword.value = false;

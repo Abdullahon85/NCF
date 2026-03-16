@@ -102,18 +102,9 @@ export const useAuthStore = defineStore("auth", () => {
       loading.value = true;
       error.value = null;
 
-      console.log("🔐 Attempting to change password...");
-      console.log("Token exists:", !!tokenStorage.getToken());
-
       await authAPI.changePassword(oldPassword, newPassword);
-
-      console.log("✅ Password changed successfully");
       return { success: true };
     } catch (e: any) {
-      console.error("❌ Password change error:", e);
-      console.error("Error response:", e.response?.data);
-      console.error("Error status:", e.response?.status);
-
       const message =
         e.response?.data?.error ||
         e.response?.data?.new_password?.[0] ||

@@ -94,6 +94,10 @@ export interface ContactInfo {
   email: string;
   address: string;
   map_url: string | null;
+  instagram?: string | null;
+  telegram?: string | null;
+  whatsapp?: string | null;
+  facebook?: string | null;
 }
 
 export interface ContactMessage {

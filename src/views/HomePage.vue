@@ -110,7 +110,7 @@ const cache = {
       return null;
     }
   },
-  set(key: string, data: any, ttl = 300) {
+  set(key: string, data: any, ttl = 300000) {
     try {
       sessionStorage.setItem(
         key,

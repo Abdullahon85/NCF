@@ -13,7 +13,7 @@ const API_BASE_URL =
 const TOKEN_KEY = "admin_token";
 const REFRESH_KEY = "admin_refresh";
 const REQUEST_TIMEOUT = 30000; // 30 seconds
-const RATE_LIMIT_DELAY = 1000; // 1 second between requests
+const RATE_LIMIT_DELAY = 150; // 150ms between requests
 
 // ============ RATE LIMITER ============
 class RateLimiter {
@@ -116,7 +116,6 @@ adminApi.interceptors.request.use(
             config.headers.Authorization = `Bearer ${data.access}`;
           } catch {
             tokenStorage.clearTokens();
-            window.location.href = "/admin/login";
             return Promise.reject(new Error("Session expired"));
           }
         }
@@ -166,11 +165,9 @@ adminApi.interceptors.response.use(
           return adminApi(originalRequest);
         } catch {
           tokenStorage.clearTokens();
-          window.location.href = "/admin/login";
         }
       } else {
         tokenStorage.clearTokens();
-        window.location.href = "/admin/login";
       }
     }
 
@@ -223,23 +220,15 @@ export const authAPI = {
       await adminApi.post("/admin/auth/logout/");
     } finally {
       tokenStorage.clearTokens();
-      window.location.href = "/admin/login";
     }
   },
 
   getMe: () => adminApi.get("/admin/auth/me/"),
 
   changePassword: (oldPassword: string, newPassword: string) => {
-    console.log("📝 Validating password...");
-
     if (newPassword.length < 8) {
-      console.error("❌ Password too short");
       return Promise.reject(new Error("Пароль должен быть минимум 8 символов"));
     }
-
-    // Упрощенная валидация - только проверка длины
-    console.log("✅ Password validation passed");
-    console.log("📤 Sending password change request...");
 
     return adminApi.post("/admin/auth/change-password/", {
       old_password: oldPassword,
@@ -541,6 +530,7 @@ export const settingsAdminAPI = {
   updateAbout: (data: any) => adminApi.put("/admin/about/", data),
   getContact: () => adminApi.get("/admin/contact/"),
   updateContact: (data: any) => adminApi.put("/admin/contact/", data),
+  patchContact: (data: any) => adminApi.patch("/admin/contact/", data),
 };
 
 // ============ MESSAGES API ============

@@ -592,21 +592,11 @@ async function loadItems() {
   try {
     // Загружаем только данные для активной вкладки
     if (activeTab.value === "features") {
-      console.log("Loading features with params:", params);
       const featuresRes = await featuresAdminAPI.getAll(params);
-      console.log("Full features response:", featuresRes);
-      console.log("Features data:", featuresRes.data);
 
       features.value = featuresRes.data.results || featuresRes.data;
       totalCountFeatures.value =
         featuresRes.data.count || features.value.length;
-
-      // Логируем что получилось
-      console.log("Features loaded into component:", features.value);
-      if (features.value.length > 0) {
-        console.log("First feature:", features.value[0]);
-        console.log("First feature values:", features.value[0].values);
-      }
     } else {
       const valueParams: any = { ...params };
       if (featureFilter.value) valueParams.feature = featureFilter.value;
@@ -675,9 +665,6 @@ function openCreateModal() {
 }
 
 async function editFeature(item: any) {
-  console.log("Editing feature:", item);
-  console.log("Feature values from API:", item.values);
-
   editingFeature.value = item;
   featureForm.name = item.name;
   featureForm.category = item.category;
@@ -698,7 +685,6 @@ async function editFeature(item: any) {
   }
 
   showFeatureModal.value = true;
-  console.log("Form selectedValues after edit:", featureForm.selectedValues);
 }
 
 async function onFeatureCategoryChange() {
@@ -821,9 +807,6 @@ async function saveFeature() {
       value_ids: featureForm.selectedValues.map((v) => v.id),
     };
 
-    console.log("Saving feature with data:", data);
-    console.log("Selected values being sent:", featureForm.selectedValues);
-
     if (editingFeature.value) {
       await featuresAdminAPI.update(editingFeature.value.id, data);
     } else {
@@ -832,7 +815,6 @@ async function saveFeature() {
 
     showFeatureModal.value = false;
     await loadItems();
-    console.log("Feature saved and data reloaded");
   } catch (e: any) {
     error.value =
       e.response?.data?.detail ||
@@ -918,17 +900,6 @@ watch(activeTab, () => {
 onMounted(async () => {
   loadItems();
   loadCategories();
-
-  // Debug check for feature values
-  setTimeout(async () => {
-    try {
-      console.log("=== DEBUG: Checking first feature ===");
-      const debugRes = await featuresAdminAPI.debugFirst();
-      console.log("Debug response:", debugRes.data);
-    } catch (e) {
-      console.error("Debug API error:", e);
-    }
-  }, 1000);
 });
 </script>
 
