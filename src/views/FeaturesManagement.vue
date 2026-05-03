@@ -1289,5 +1289,4 @@ onMounted(async () => {
   line-height: 1.5;
   margin-bottom: 16px;
 }
-
 </style>

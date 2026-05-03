@@ -24,10 +24,10 @@ export const useAuthStore = defineStore("auth", () => {
 
   // Getters
   const isAuthenticated = computed(
-    () => authAPI.checkSession() && !!user.value
+    () => authAPI.checkSession() && !!user.value,
   );
   const isAdmin = computed(
-    () => user.value?.is_staff || user.value?.is_superuser
+    () => user.value?.is_staff || user.value?.is_superuser,
   );
   const fullName = computed(() => {
     if (!user.value) return "";
